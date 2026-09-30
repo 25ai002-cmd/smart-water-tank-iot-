@@ -5,8 +5,9 @@
    ===================================================== */
 
 const CONFIG = {
-  sensorHeight:       22.2,    // cm sensor height from bottom
-  tankHeight:         19.9,    // cm maximum water height
+  sensorHeight:       20.2,    // cm physical sensor height from bottom
+  tankHeight:         20.0,    // cm maximum 100% full water height
+  sensorOffset:       2.0,     // cm ultrasonic pulse calibration offset
   motorOnThreshold:   20,      // %
   motorOffThreshold:  90,      // %
   buzzerLowThreshold: 20,      // %
