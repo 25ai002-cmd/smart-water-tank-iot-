@@ -70,7 +70,7 @@ const String SERVER_URL = "https://smart-water-tank-iot.onrender.com/api/sensor"
 #define RELAY_ACTIVE_LOW true
 
 // Sensor total mounting height from bottom of tank in centimeters
-const float SENSOR_TOTAL_HEIGHT = 22.5;
+const float SENSOR_TOTAL_HEIGHT = 21.5;
 
 // Tank maximum full water capacity height in centimeters (100% full)
 const float TANK_HEIGHT = 20.0;
