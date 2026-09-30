@@ -30,6 +30,7 @@
 
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 
 /* ===========================================================
@@ -37,12 +38,11 @@
    =========================================================== */
 
 // Your Wi-Fi network name and password
-const char* WIFI_SSID = "MMSY 4G";
-const char* WIFI_PASS = "14192007";
+const char* WIFI_SSID = "Redmi 12 5G";
+const char* WIFI_PASS = "Mahesh14";
 
-// Your PC's local IP address (replace 192.168.1.X with your PC's IP shown by START SERVER.bat)
-// Example: "http://192.168.1.15:3000/api/sensor"
-const String SERVER_URL = "http://10.204.4.141:3000/api/sensor";
+// Server URL (Render Cloud URL)
+const String SERVER_URL = "https://smart-water-tank-iot.onrender.com/api/sensor";
 
 /* ===========================================================
    STEP 2 — HARDWARE CONFIGURATION
@@ -73,8 +73,9 @@ const unsigned long SEND_INTERVAL = 3000; // 3 seconds
    GLOBAL VARIABLES — do not change
    =========================================================== */
 
-unsigned long lastSendTime = 0;
-WiFiClient    wifiClient;
+unsigned long     lastSendTime = 0;
+WiFiClient        wifiClient;
+WiFiClientSecure  secureClient;
 
 /* ===========================================================
    SETUP — Runs once on power up / reset
@@ -267,7 +268,14 @@ float measureDistance() {
 
 void sendToServer(float distance) {
   HTTPClient http;
-  http.begin(wifiClient, SERVER_URL);
+
+  if (SERVER_URL.startsWith("https://")) {
+    secureClient.setInsecure(); // Allow SSL handshake for cloud services like Render
+    http.begin(secureClient, SERVER_URL);
+  } else {
+    http.begin(wifiClient, SERVER_URL);
+  }
+
   http.addHeader("Content-Type", "application/json");
   http.setTimeout(4000); // 4 second connection timeout
 

@@ -41,11 +41,8 @@
 const char* WIFI_SSID = "Redmi 12 5G";
 const char* WIFI_PASS = "Mahesh14";
 
-// Server URL (Local IP or Render Cloud URL)
-// Examples:
-//   Local:  "http://10.204.4.141:3000/api/sensor"
-//   Render: "https://your-app-name.onrender.com/api/sensor"
-const String SERVER_URL = "http://10.204.4.141:3000/api/sensor";
+// Server URL (Render Cloud URL)
+const String SERVER_URL = "https://smart-water-tank-iot.onrender.com/api/sensor";
 
 /* ===========================================================
    STEP 2 — HARDWARE CONFIGURATION
