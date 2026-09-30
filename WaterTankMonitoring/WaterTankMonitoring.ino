@@ -69,14 +69,11 @@ const String SERVER_URL = "https://smart-water-tank-iot.onrender.com/api/sensor"
 // Set to false for Active-HIGH relay modules (HIGH = Relay ON, LOW = Relay OFF)
 #define RELAY_ACTIVE_LOW true
 
-// Sensor mounting height from bottom of tank in centimeters
-const float SENSOR_HEIGHT = 20.2;
+// Sensor total mounting height from bottom of tank in centimeters
+const float SENSOR_TOTAL_HEIGHT = 22.7;
 
 // Tank maximum full water capacity height in centimeters (100% full)
 const float TANK_HEIGHT = 20.0;
-
-// Ultrasonic pulse calibration offset in centimeters
-const float SENSOR_OFFSET = 2.0;
 
 // How often to read sensor and send data to server (milliseconds)
 const unsigned long SEND_INTERVAL = 3000; // 3 seconds
@@ -154,10 +151,9 @@ void loop() {
       return;
     }
 
-    // 2. Calculate water height & percentage with calibration offset
-    float calibratedDist = max(0.0f, distance - SENSOR_OFFSET);
-    float waterLevel     = constrain(SENSOR_HEIGHT - calibratedDist, 0.0f, TANK_HEIGHT);
-    float waterPct       = constrain((waterLevel / TANK_HEIGHT) * 100.0f, 0.0f, 100.0f);
+    // 2. Calculate water height & percentage
+    float waterLevel = constrain(SENSOR_TOTAL_HEIGHT - distance, 0.0f, TANK_HEIGHT);
+    float waterPct   = constrain((waterLevel / TANK_HEIGHT) * 100.0f, 0.0f, 100.0f);
 
     // 3. Print sensor telemetry to Serial
     printReadings(distance, waterLevel, waterPct);

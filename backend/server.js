@@ -103,9 +103,8 @@ const DB_PATH      = path.join(__dirname, 'db.json');
 const FRONTEND_DIR = path.join(__dirname, '..');
 
 // ── Tank Configuration ────────────────────────────────
-const SENSOR_HEIGHT       = 20.2; // Physical sensor mounting height from bottom of tank (cm)
+const SENSOR_TOTAL_HEIGHT = 22.7; // Total height from bottom of tank to sensor eyes (cm)
 const TANK_HEIGHT         = 20.0; // 100% full water capacity height (cm)
-const SENSOR_OFFSET       = 2.0;  // Ultrasonic sensor pulse calibration offset (cm)
 const MOTOR_ON_THRESHOLD  = 20;
 const MOTOR_OFF_THRESHOLD = 90;
 const BUZZER_LOW          = 20;
@@ -227,8 +226,7 @@ function calculateFromDistance(sensorDistance, settings = {}) {
   const buzzerLow      = settings.buzzerLowThreshold  !== undefined ? settings.buzzerLowThreshold  : 20;
   const buzzerHigh     = settings.buzzerHighThreshold !== undefined ? settings.buzzerHighThreshold : 90;
 
-  const calibratedDist  = Math.max(0.0, sensorDistance - SENSOR_OFFSET);
-  const rawLevel        = SENSOR_HEIGHT - calibratedDist;
+  const rawLevel        = SENSOR_TOTAL_HEIGHT - sensorDistance;
   const waterLevel      = +Math.max(0, Math.min(TANK_HEIGHT, rawLevel)).toFixed(1);
   const waterPercentage = +Math.round(Math.max(0, Math.min(100, (waterLevel / TANK_HEIGHT) * 100)));
 
@@ -572,8 +570,7 @@ app.post('/api/sensor', (req, res) => {
   const now      = Date.now();
 
   // Auto-clear sourceEmpty lockout if water percentage in tank has risen by >= 1.0%
-  const calibratedDist    = Math.max(0.0, dist - SENSOR_OFFSET);
-  const currentWaterLevel = +Math.max(0, Math.min(TANK_HEIGHT, SENSOR_HEIGHT - calibratedDist)).toFixed(1);
+  const currentWaterLevel = +Math.max(0, Math.min(TANK_HEIGHT, SENSOR_TOTAL_HEIGHT - dist)).toFixed(1);
   const currentWaterPct   = +Math.round(Math.max(0, Math.min(100, (currentWaterLevel / TANK_HEIGHT) * 100)));
   if (db.motor.sourceEmpty && currentWaterPct >= prevPct + 1.0) {
     db.motor.sourceEmpty = false;
