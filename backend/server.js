@@ -103,7 +103,7 @@ const DB_PATH      = path.join(__dirname, 'db.json');
 const FRONTEND_DIR = path.join(__dirname, '..');
 
 // ── Tank Configuration ────────────────────────────────
-const SENSOR_HEIGHT       = 20.5; // Sensor mounting height from tank bottom (cm)
+const SENSOR_HEIGHT       = 22.2; // Calibrated sensor mounting height from tank bottom (cm)
 const TANK_HEIGHT         = 19.9; // Maximum full water capacity height (cm)
 const MOTOR_ON_THRESHOLD  = 20;
 const MOTOR_OFF_THRESHOLD = 90;

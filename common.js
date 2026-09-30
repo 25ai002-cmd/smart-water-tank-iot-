@@ -5,7 +5,7 @@
    ===================================================== */
 
 const CONFIG = {
-  sensorHeight:       20.5,    // cm sensor height from bottom
+  sensorHeight:       22.2,    // cm sensor height from bottom
   tankHeight:         19.9,    // cm maximum water height
   motorOnThreshold:   20,      // %
   motorOffThreshold:  90,      // %
