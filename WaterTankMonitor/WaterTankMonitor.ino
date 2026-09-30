@@ -29,17 +29,26 @@
  */
 
 #include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
 #include <ESP8266HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 
 /* ===========================================================
-   STEP 1 — NETWORK CONFIGURATION (CHANGE THESE VALUES)
+   STEP 1 — NETWORK CONFIGURATION (MULTI-WIFI AUTO CONNECT)
    =========================================================== */
 
-// Your Wi-Fi network name and password
-const char* WIFI_SSID = "Redmi 12 5G";
-const char* WIFI_PASS = "Mahesh14";
+// Register all your Wi-Fi networks here.
+// NodeMCU will automatically connect to whichever one is available!
+ESP8266WiFiMulti wifiMulti;
+
+void registerWiFiNetworks() {
+  wifiMulti.addAP("Redmi 12 5G", "Mahesh14");  // Phone Hotspot 1
+  wifiMulti.addAP("MMSY 4G",     "14192007");  // Phone Hotspot 2
+  // Add more networks as needed:
+  // wifiMulti.addAP("Home_WiFi_Name", "Home_WiFi_Password");
+  // wifiMulti.addAP("College_WiFi",   "College_Password");
+}
 
 // Server URL (Render Cloud URL)
 const String SERVER_URL = "https://smart-water-tank-iot.onrender.com/api/sensor";
@@ -101,7 +110,8 @@ void setup() {
   digitalWrite(BUZZER_PIN, LOW);
   digitalWrite(LED_PIN, HIGH); // Off for ESP8266 built-in LED (inverted logic)
 
-  // Connect to Wi-Fi
+  // Configure Multi-WiFi and Connect
+  registerWiFiNetworks();
   connectWiFi();
 }
 
@@ -116,11 +126,13 @@ void loop() {
   if (now - lastSendTime >= SEND_INTERVAL) {
     lastSendTime = now;
 
-    // Check Wi-Fi connection
-    if (WiFi.status() != WL_CONNECTED) {
-      Serial.println("[WARN] Wi-Fi lost! Attempting reconnect...");
-      connectWiFi();
+    // Check Multi-WiFi connection (auto-reconnects to strongest available AP)
+    if (wifiMulti.run() != WL_CONNECTED) {
+      Serial.println("[WARN] Wi-Fi lost! Auto-reconnecting to available network...");
+      digitalWrite(LED_PIN, !digitalRead(LED_PIN)); // Flash LED
       return;
+    } else {
+      digitalWrite(LED_PIN, LOW); // Solid ON when connected
     }
 
     // 1. Measure distance using ultrasonic sensor
@@ -155,41 +167,40 @@ void loop() {
 
 /* ===========================================================
    FUNCTION: connectWiFi
-   Connects to Wi-Fi router with visual LED indication.
+   Searches and connects to any available registered Wi-Fi network.
    =========================================================== */
 
 void connectWiFi() {
-  Serial.print("Connecting to Wi-Fi Network: ");
-  Serial.println(WIFI_SSID);
+  Serial.println("Searching and connecting to available registered Wi-Fi...");
 
   WiFi.mode(WIFI_STA);
-  WiFi.begin(WIFI_SSID, WIFI_PASS);
 
   int attempts = 0;
-  while (WiFi.status() != WL_CONNECTED && attempts < 30) {
+  while (wifiMulti.run() != WL_CONNECTED && attempts < 30) {
     delay(500);
     digitalWrite(LED_PIN, !digitalRead(LED_PIN)); // Flash LED while connecting
     Serial.print(".");
     attempts++;
   }
 
-  if (WiFi.status() == WL_CONNECTED) {
+  if (wifiMulti.run() == WL_CONNECTED) {
     digitalWrite(LED_PIN, LOW); // Turn LED solid ON when connected
     Serial.println("\n\n[OK] Connected to Wi-Fi!");
+    Serial.print("  Connected SSID     : ");
+    Serial.println(WiFi.SSID());
     Serial.print("  NodeMCU IP Address : ");
     Serial.println(WiFi.localIP());
     Serial.print("  Signal Strength    : ");
     Serial.print(WiFi.RSSI());
     Serial.println(" dBm");
-    Serial.print("  Backend Server URL : ");
+    Serial.print("  Cloud Server URL   : ");
     Serial.println(SERVER_URL);
     Serial.println("========================================\n");
   } else {
     digitalWrite(LED_PIN, HIGH); // Turn LED OFF on failure
     Serial.println("\n\n[ERROR] Wi-Fi connection failed!");
-    Serial.println("  1. Verify WIFI_SSID & WIFI_PASS in code.");
-    Serial.println("  2. Ensure 2.4GHz Wi-Fi network is enabled.");
-    Serial.println("  3. Move NodeMCU closer to router.");
+    Serial.println("  1. Verify your phone hotspot / Wi-Fi is turned ON.");
+    Serial.println("  2. Ensure 2.4GHz Wi-Fi band is active.");
   }
 }
 
