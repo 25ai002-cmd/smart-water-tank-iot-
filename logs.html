@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="View full sensor history and activity logs for the Smart Water Tank Monitor." />
+  <title>Activity Logs — Smart Water Tank Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    .logs-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      border-radius: 12px;
+    }
+
+    .logs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    .logs-table thead tr {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .logs-table th {
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.77rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-glass);
+      white-space: nowrap;
+    }
+
+    .logs-table td {
+      padding: 10px 14px;
+      color: var(--text-secondary);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .logs-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .logs-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 0.73rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-pill.on {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-pill.off {
+      background: rgba(100, 116, 139, 0.1);
+      color: var(--text-muted);
+      border: 1px solid rgba(100, 116, 139, 0.2);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 2rem;
+      gap: 1rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state .empty-icon {
+      font-size: 3rem;
+      opacity: 0.5;
+    }
+
+    .empty-state p {
+      font-size: 0.88rem;
+      text-align: center;
+      max-width: 340px;
+      line-height: 1.6;
+    }
+
+    .logs-stats-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .logs-stat-badge {
+      background: rgba(14, 165, 233, 0.08);
+      border: 1px solid rgba(14, 165, 233, 0.2);
+      border-radius: 8px;
+      padding: 5px 14px;
+      font-size: 0.8rem;
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .page-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .page-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .pct-bar-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .pct-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: var(--primary);
+      box-shadow: 0 0 6px rgba(14, 165, 233, 0.5);
+      min-width: 4px;
+      max-width: 80px;
+    }
+
+    .pct-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app-container">
+
+    <!-- ===== SIDEBAR (Desktop) ===== -->
+    <nav class="sidebar" aria-label="Primary navigation">
+      <div class="brand-section">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6 8 4 12 4 14a8 8 0 0 0 16 0c0-2-2-6-8-12z"/></svg>
+        <div>
+          <p class="brand-title">AquaMonitor</p>
+        </div>
+      </div>
+
+      <ul class="nav-menu" role="list">
+        <li class="nav-item" role="listitem">
+          <a href="index.html" aria-label="Dashboard">
+            <span class="nav-icon">💧</span>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item" role="listitem">
+          <a href="controls.html" aria-label="Controls">
+            <span class="nav-icon">⚙️</span>
+            <span>Controls</span>
+          </a>
+        </li>
+        <li class="nav-item active" role="listitem">
+          <a href="logs.html" aria-current="page" aria-label="Activity Logs — current page">
+            <span class="nav-icon">📋</span>
+            <span>Activity Logs</span>
+          </a>
+        </li>
+        <li class="nav-item" role="listitem">
+          <a href="hardware.html" aria-label="Hardware">
+            <span class="nav-icon">🔧</span>
+            <span>Hardware</span>
+          </a>
+        </li>
+        <li class="nav-item" role="listitem">
+          <a href="notifications.html" aria-label="Notifications">
+            <span class="nav-icon">🔔</span>
+            <span>Notifications</span>
+          </a>
+        </li>
+        <li class="nav-item" role="listitem">
+          <a href="project.html" aria-label="Project Info">
+            <span class="nav-icon">📁</span>
+            <span>Project Info</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <p>IoT Sem 3 · College Project</p>
+        <p style="margin-top:4px; opacity:0.6;">NodeMCU ESP8266</p>
+      </div>
+    </nav>
+
+    <!-- ===== BOTTOM NAV (mobile) ===== -->
+    <nav class="bottom-nav" aria-label="Mobile navigation">
+      <a href="index.html" class="bottom-nav-item" aria-label="Dashboard">
+        <span class="nav-icon">💧</span>
+        <span>Dashboard</span>
+      </a>
+      <a href="controls.html" class="bottom-nav-item" aria-label="Controls">
+        <span class="nav-icon">⚙️</span>
+        <span>Controls</span>
+      </a>
+      <a href="logs.html" class="bottom-nav-item active" aria-current="page" aria-label="Activity Logs">
+        <span class="nav-icon">📋</span>
+        <span>Logs</span>
+      </a>
+      <a href="notifications.html" class="bottom-nav-item" aria-label="Notifications">
+        <span class="nav-icon">🔔</span>
+        <span>Alerts</span>
+      </a>
+    </nav>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content">
+      <div class="page-header-row">
+        <div>
+          <h1 class="page-title">📋 Activity Logs</h1>
+          <div class="connection-badge">
+            <span class="status-dot" id="connection-dot"></span>
+            <span id="connection-text">Connecting…</span>
+          </div>
+        </div>
+        <div class="page-header-actions">
+          <a href="notifications.html" class="bell-btn" aria-label="View notifications" style="margin-right:0.5rem;">
+            🔔
+            <span class="bell-badge" style="display:none;">0</span>
+          </a>
+          <button class="btn-danger" id="clear-logs-btn" onclick="clearLogs()">🗑️ Clear All Logs</button>
+        </div>
+      </div>
+
+      <!-- Stats bar -->
+      <div class="logs-stats-bar">
+        <div class="logs-stat-badge">📊 Showing <span id="logs-count">—</span></div>
+        <div style="font-size:0.8rem; color:var(--text-muted);">Auto-refreshes every 10 seconds</div>
+      </div>
+
+      <!-- Logs Table Card -->
+      <div class="card" style="padding:0; overflow:hidden;">
+        <div class="card-header" style="padding:1rem 1.25rem; margin-bottom:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <span class="card-title">Sensor Readings History</span>
+          <button class="btn-secondary" onclick="fetchLogs()" style="margin-left:auto; display:inline-flex; align-items:center; gap:6px; padding:0.4rem 0.9rem; font-size:0.8rem;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Refresh
+          </button>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="empty-state" style="display:none;">
+          <div class="empty-icon">📊</div>
+          <p>No sensor readings yet.<br />Send a request to <code
+              style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; font-size:0.82rem;">/api/sensor</code>
+            from the NodeMCU.</p>
+        </div>
+
+        <div class="logs-table-wrapper" style="padding:0 0 0.5rem;">
+          <table class="logs-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Timestamp</th>
+                <th>Sensor Dist</th>
+                <th>Water Level</th>
+                <th>Water %</th>
+                <th>Motor</th>
+                <th>Buzzer</th>
+              </tr>
+            </thead>
+            <tbody id="logs-tbody">
+              <tr>
+                <td colspan="7" style="text-align:center; color:var(--text-muted); padding:2.5rem;">
+                  <span style="display:block; font-size:1.5rem; margin-bottom:0.5rem;">⏳</span>
+                  Loading records…
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="common.js"></script>
+  <script src="logs.js"></script>
+</body>
+
+</html>

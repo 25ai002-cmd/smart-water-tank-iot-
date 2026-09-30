@@ -1,0 +1,229 @@
+{
+  "sensor": {
+    "tankHeight": 19.9,
+    "sensorDistance": 4.3,
+    "waterLevel": 16.2,
+    "waterPercentage": 81,
+    "timestamp": "2026-09-28T19:23:13.993Z"
+  },
+  "motor": {
+    "status": false,
+    "mode": "auto",
+    "lastChanged": "2026-09-28T19:23:13.993Z",
+    "onSince": null,
+    "sourceEmpty": false,
+    "lastSourceEmptyTime": "2026-09-28T19:18:59.323Z"
+  },
+  "buzzer": {
+    "status": false,
+    "lastChanged": "2026-09-28T19:23:13.993Z"
+  },
+  "history": [],
+  "settings": {
+    "motorOnThreshold": 20,
+    "motorOffThreshold": 78,
+    "buzzerLowThreshold": 20,
+    "buzzerHighThreshold": 78,
+    "scheduleEnabled": true,
+    "scheduleTime": "15:23"
+  },
+  "subscriptions": [
+    {
+      "endpoint": "https://wns2-pn1p.notify.windows.com/w/?token=BQYAAAA0t%2fE%2fw7hpdAYc%2bLwQmw3jGNz2hKV1RwqmN9tip4CMILeSZzhPUrIJdaw2DbD1FYTtMcuv2yE3COed8dGBWhV3lIZb2mSKzfyucKWFX8ZIgMnJ4rURJtnGj1xHq1rzD2VIOkWOSoGWkmzppSa34qEqZvqPop282GMrDHVkAiI9uWESoF7wuiKbiTRzxvkMCPa%2b5fNEiAKDjbQRfx3dgGSHzyZukV732degA%2bGVL4Lj6cMaRtuhSQDt%2bDBkzB4XQO9jZuJPp1sRTkSIlCUe6ehuHEGE4B%2b%2bZjlQjyS%2bOUmrA%2ffV2qEdVl4LmqeKmQLsUbs%3d",
+      "expirationTime": null,
+      "keys": {
+        "p256dh": "BDx60grDkmAkxAzCL33bc-aoT013Ys2JHCiWxow74QfV_OY8PS5DpK6ITsk0Qe9KzSl1AMJxrhGCZxe2C2gi3J4",
+        "auth": "WZnHbmhg2kdReFc4FjBeGw"
+      }
+    }
+  ],
+  "pushState": {
+    "lastAlert": "high",
+    "stallNotified": false,
+    "lastScheduledTrigger": "2026-09-27"
+  },
+  "notifications": [
+    {
+      "id": 1790623432950,
+      "notificationType": "sensor_timeout",
+      "title": "⚠️ Sensor Timeout",
+      "message": "No sensor data received for more than 30 seconds. Please check the sensor connection.",
+      "priority": "critical",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:23:52.950Z",
+      "resolvedAt": null
+    },
+    {
+      "id": 1790623172600,
+      "notificationType": "motor_stopped",
+      "title": "ℹ️ Water Pump Stopped",
+      "message": "Water pump stopped successfully.",
+      "priority": "info",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:19:32.600Z",
+      "resolvedAt": null
+    },
+    {
+      "id": 1790623139324,
+      "notificationType": "dry_run",
+      "title": "⚠️ Dry Run Protection Activated",
+      "message": "Pump running without water from resource. Motor stopped automatically to protect hardware.",
+      "priority": "critical",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:18:59.324Z",
+      "resolvedAt": "2026-09-28T19:19:07.338Z"
+    },
+    {
+      "id": 1790623139323,
+      "notificationType": "source_empty",
+      "title": "🚨 Resource Empty — Motor Stopped",
+      "message": "No water detected in resource! Motor stopped after 12s to prevent dry-run damage. Will auto-retry once refilled.",
+      "priority": "critical",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:18:59.323Z",
+      "resolvedAt": "2026-09-28T19:19:07.338Z"
+    },
+    {
+      "id": 1790623127232,
+      "notificationType": "motor_started",
+      "title": "ℹ️ Water Pump Started",
+      "message": "Water pump started successfully.",
+      "priority": "info",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:18:47.232Z",
+      "resolvedAt": "2026-09-28T19:19:32.600Z"
+    },
+    {
+      "id": 1790623124790,
+      "notificationType": "rapid_water_loss",
+      "title": "⚠️ Rapid Water Loss",
+      "message": "Water level dropped by 19.0% in 5 minutes. Possible leakage detected.",
+      "priority": "warning",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:18:44.790Z",
+      "resolvedAt": null
+    },
+    {
+      "id": 1790623004312,
+      "notificationType": "sensor_timeout",
+      "title": "⚠️ Sensor Timeout",
+      "message": "No sensor data received for more than 30 seconds. Please check the sensor connection.",
+      "priority": "critical",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:16:44.312Z",
+      "resolvedAt": "2026-09-28T19:16:57.677Z"
+    },
+    {
+      "id": 1790622609309,
+      "notificationType": "motor_stopped",
+      "title": "ℹ️ Water Pump Stopped",
+      "message": "Water pump stopped successfully.",
+      "priority": "info",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:10:09.309Z",
+      "resolvedAt": "2026-09-28T19:18:47.236Z"
+    },
+    {
+      "id": 1790622573155,
+      "notificationType": "motor_started",
+      "title": "ℹ️ Water Pump Started",
+      "message": "Water pump started successfully.",
+      "priority": "info",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:09:33.155Z",
+      "resolvedAt": "2026-09-28T19:10:09.310Z"
+    },
+    {
+      "id": 1790622524329,
+      "notificationType": "rapid_water_loss",
+      "title": "⚠️ Rapid Water Loss",
+      "message": "Water level dropped by 39.0% in 5 minutes. Possible leakage detected.",
+      "priority": "warning",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:08:44.329Z",
+      "resolvedAt": "2026-09-28T19:13:44.346Z"
+    },
+    {
+      "id": 1790622470961,
+      "notificationType": "sensor_timeout",
+      "title": "⚠️ Sensor Timeout",
+      "message": "No sensor data received for more than 30 seconds. Please check the sensor connection.",
+      "priority": "critical",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:07:50.961Z",
+      "resolvedAt": "2026-09-28T19:08:44.743Z"
+    },
+    {
+      "id": 1790622064540,
+      "notificationType": "motor_stopped",
+      "title": "ℹ️ Water Pump Stopped",
+      "message": "Water pump stopped successfully.",
+      "priority": "info",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:01:04.540Z",
+      "resolvedAt": "2026-09-28T19:09:33.156Z"
+    },
+    {
+      "id": 1790622028081,
+      "notificationType": "motor_started",
+      "title": "ℹ️ Water Pump Started",
+      "message": "Water pump started successfully.",
+      "priority": "info",
+      "isRead": false,
+      "createdAt": "2026-09-28T19:00:28.081Z",
+      "resolvedAt": "2026-09-28T19:01:04.541Z"
+    },
+    {
+      "id": 1790621851226,
+      "notificationType": "rapid_water_loss",
+      "title": "⚠️ Rapid Water Loss",
+      "message": "Water level dropped by 36.0% in 5 minutes. Possible leakage detected.",
+      "priority": "warning",
+      "isRead": false,
+      "createdAt": "2026-09-28T18:57:31.226Z",
+      "resolvedAt": "2026-09-28T19:02:31.491Z"
+    },
+    {
+      "id": 1790621798487,
+      "notificationType": "sensor_timeout",
+      "title": "⚠️ Sensor Timeout",
+      "message": "No sensor data received for more than 30 seconds. Please check the sensor connection.",
+      "priority": "critical",
+      "isRead": false,
+      "createdAt": "2026-09-28T18:56:38.487Z",
+      "resolvedAt": "2026-09-28T18:57:31.761Z"
+    }
+  ],
+  "notificationState": {
+    "dryRunTracker": null,
+    "rapidLossTracker": {
+      "level": 59,
+      "time": 1790623124790
+    },
+    "sensor_timeout": {
+      "active": true,
+      "since": "2026-09-28T19:23:52.950Z"
+    },
+    "rapid_water_loss": {
+      "active": true,
+      "since": "2026-09-28T19:18:44.790Z"
+    },
+    "motor_started": {
+      "active": false
+    },
+    "pumpStartedAt": null,
+    "levelAtPumpStart": null,
+    "lastLevelWhileMotorOn": null,
+    "lastLevelWhileMotorOnTime": null,
+    "motor_stopped": {
+      "active": true,
+      "since": "2026-09-28T19:19:32.600Z"
+    },
+    "source_empty": {
+      "active": false
+    },
+    "dry_run": {
+      "active": false
+    }
+  }
+}

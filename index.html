@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — AquaMonitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=10" />
+  <link rel="manifest" href="manifest.json" />
+</head>
+<body>
+
+  <div class="app-container">
+
+    <!-- ===== SIDEBAR (Desktop) ===== -->
+    <nav class="sidebar" aria-label="Primary navigation">
+      <div class="brand-section">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6 8 4 12 4 14a8 8 0 0 0 16 0c0-2-2-6-8-12z"/></svg>
+        <div>
+          <p class="brand-title">AquaMonitor</p>
+        </div>
+      </div>
+
+      <ul class="nav-menu" role="list">
+        <li class="nav-item active">
+          <a href="index.html" aria-current="page">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="controls.html">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+            <span>Controls</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="logs.html">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span>Activity Logs</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="hardware.html">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><line x1="9" y1="1" x2="9" y2="4"/><line x1="15" y1="1" x2="15" y2="4"/><line x1="9" y1="20" x2="9" y2="23"/><line x1="15" y1="20" x2="15" y2="23"/></svg>
+            <span>Hardware</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="notifications.html">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+            <span>Notifications</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="project.html">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+            <span>Project Info</span>
+          </a>
+        </li>
+      </ul>
+
+      <div class="sidebar-footer">
+        <p>IoT Sem 3 · College Project</p>
+        <p style="opacity:0.5; margin-top:3px;">NodeMCU ESP8266</p>
+      </div>
+    </nav>
+
+    <!-- ===== BOTTOM NAV (Mobile) ===== -->
+    <nav class="bottom-nav" aria-label="Mobile navigation">
+      <a href="index.html" class="bottom-nav-item active" aria-current="page">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span>Dashboard</span>
+      </a>
+      <a href="controls.html" class="bottom-nav-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+        <span>Controls</span>
+      </a>
+      <a href="logs.html" class="bottom-nav-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        <span>Logs</span>
+      </a>
+      <a href="notifications.html" class="bottom-nav-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Alerts</span>
+      </a>
+    </nav>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <main class="main-content" id="main-content">
+
+      <!-- Page Header -->
+      <header class="page-header">
+        <div>
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-subtitle">Live water tank monitoring &amp; system status</p>
+        </div>
+        <div class="header-actions">
+
+          <!-- Bell Button + Notification Dropdown -->
+          <div class="bell-wrapper" id="bell-wrapper">
+            <button class="bell-btn" id="bell-btn" onclick="toggleBellDropdown()" aria-label="Notifications" aria-expanded="false" aria-haspopup="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span class="bell-badge" id="bell-badge" style="display:none;">0</span>
+            </button>
+
+            <!-- Dropdown Panel -->
+            <div class="notif-dropdown" id="bell-dropdown" role="dialog" aria-label="Notifications panel">
+              <div class="notif-dropdown-header">
+                <span class="notif-dropdown-title">Notifications</span>
+                <button class="notif-mark-all" onclick="markAllReadDash()" title="Mark all as read">Mark all read</button>
+              </div>
+              <div class="notif-dropdown-list" id="notif-dropdown-list">
+                <div class="notif-empty-state">
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                  <p>No notifications yet</p>
+                </div>
+              </div>
+              <div class="notif-dropdown-footer">
+                <a href="notifications.html" class="notif-view-all">View all notifications →</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Connection Status -->
+          <div class="status-badge" id="connection-badge" role="status" aria-live="polite">
+            <span class="status-dot demo" id="connection-dot"></span>
+            <span id="connection-text">Demo Mode</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Alert Banner -->
+      <div class="alert-banner alert-normal" id="alert-banner" role="alert" aria-live="polite">
+        <div class="alert-icon-wrap" id="alert-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <span id="alert-text">Normal water level — system is running fine.</span>
+      </div>
+
+      <!-- ===== MAIN GRID ===== -->
+      <div class="dashboard-grid">
+
+        <!-- Tank Visual Card -->
+        <div class="card tank-visual-card">
+          <div class="card-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6 8 4 12 4 14a8 8 0 0 0 16 0c0-2-2-6-8-12z"/></svg>
+            <span class="card-title">Live Water Level</span>
+          </div>
+
+          <div class="tank-wrap">
+            <div class="tank-shell" role="img" aria-label="Water tank fill visualization">
+              <div class="tank-scale" aria-hidden="true">
+                <span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span>
+              </div>
+              <div class="tank-water" id="tank-water" style="height:75%;">
+                <div class="water-wave" aria-hidden="true"></div>
+                <span class="tank-label" id="tank-label">75%</span>
+              </div>
+            </div>
+            <p class="tank-sensor-label">HC-SR04 Ultrasonic Sensor</p>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="right-col">
+
+          <!-- Stats 2×2 -->
+          <div class="card">
+            <div class="card-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+              <span class="card-title">Quick Stats</span>
+            </div>
+            <div class="stats-grid">
+              <div class="stat-box">
+                <p class="stat-label">Water Level</p>
+                <p class="stat-value" id="stat-percentage">75%</p>
+              </div>
+              <div class="stat-box">
+                <p class="stat-label">Filled Height</p>
+                <p class="stat-value" id="stat-water-height">15.4 cm</p>
+              </div>
+              <div class="stat-box">
+                <p class="stat-label">Empty Space</p>
+                <p class="stat-value" id="stat-empty-space">6.1 cm</p>
+              </div>
+              <div class="stat-box">
+                <p class="stat-label">Sensor Dist</p>
+                <p class="stat-value" id="stat-distance">6.1 cm</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Status -->
+          <div class="card">
+            <div class="card-header">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+              <span class="card-title">System Status</span>
+            </div>
+
+            <!-- Motor -->
+            <div class="hw-row" id="motor-card">
+              <div class="hw-icon-wrap" id="motor-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+              </div>
+              <div class="hw-info">
+                <p class="hw-name">Water Pump</p>
+                <p class="hw-sub" id="motor-control-label">Pump is idle</p>
+              </div>
+              <div class="hw-right">
+                <span class="hw-badge" id="motor-badge">Auto</span>
+                <span class="hw-status" id="motor-status-text">OFF</span>
+              </div>
+              <button class="btn-sm" id="dash-motor-btn" onclick="toggleMotorDash()">Turn ON</button>
+            </div>
+
+            <div class="hw-divider"></div>
+
+            <!-- Buzzer -->
+            <div class="hw-row" id="buzzer-card">
+              <div class="hw-icon-wrap" id="buzzer-icon-wrap">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              </div>
+              <div class="hw-info">
+                <p class="hw-name">Buzzer Alert</p>
+                <p class="hw-sub">Sound alarm on low level</p>
+              </div>
+              <div class="hw-right">
+                <span class="hw-badge" id="buzzer-status-text">OFF</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Sensor Details Table -->
+      <div class="card" style="margin-top:1.5rem;">
+        <div class="card-header">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <span class="card-title">Sensor Details</span>
+        </div>
+        <div class="details-grid">
+          <div class="detail-row"><span class="detail-key">Tank Height</span><span class="detail-val" id="d-tank-height">21.5 cm</span></div>
+          <div class="detail-row"><span class="detail-key">Water Filled</span><span class="detail-val" id="d-water-filled">—</span></div>
+          <div class="detail-row"><span class="detail-key">Empty Space</span><span class="detail-val" id="d-empty-space">—</span></div>
+          <div class="detail-row"><span class="detail-key">Sensor Distance</span><span class="detail-val" id="d-sensor-dist">—</span></div>
+          <div class="detail-row"><span class="detail-key">Water Percentage</span><span class="detail-val" id="d-water-pct">—</span></div>
+          <div class="detail-row"><span class="detail-key">Controller</span><span class="detail-val">NodeMCU ESP8266</span></div>
+          <div class="detail-row"><span class="detail-key">Sensor Model</span><span class="detail-val">HC-SR04 Ultrasonic</span></div>
+          <div class="detail-row"><span class="detail-key">Last Updated</span><span class="detail-val" id="d-last-update">—</span></div>
+        </div>
+      </div>
+
+
+
+
+    </main>
+  </div>
+
+  <!-- Click-outside to close dropdown -->
+  <script>
+    document.addEventListener('click', function(e) {
+      const wrapper = document.getElementById('bell-wrapper');
+      if (wrapper && !wrapper.contains(e.target)) {
+        closeBellDropdown();
+      }
+    });
+  </script>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="common.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

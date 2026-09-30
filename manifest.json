@@ -1,0 +1,17 @@
+{
+  "name": "Smart Water Tank Monitor",
+  "short_name": "AquaMonitor",
+  "description": "IoT Smart Water Tank Monitoring and Control System",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f0f4f8",
+  "theme_color": "#0284c7",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}

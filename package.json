@@ -1,0 +1,19 @@
+{
+  "name": "iot-smart-water-tank",
+  "version": "1.0.0",
+  "description": "IoT Smart Water Tank Monitoring & Control System",
+  "main": "backend/server.js",
+  "scripts": {
+    "start": "node backend/server.js",
+    "build": "cd backend && npm install"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "localtunnel": "^2.0.2",
+    "socket.io": "^4.8.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "web-push": "^3.6.7"
+  }
+}

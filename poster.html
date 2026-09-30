@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Water Tank Monitor — Professional Advertising Poster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-main: #f8fafc;
+      --bg-poster: #ffffff;
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --primary: #1e3a8a;       /* Deep Corporate Navy */
+      --primary-light: #eff6ff; /* Very soft blue */
+      --accent: #0284c7;        /* Clean Slate Blue */
+      --accent-light: #f0f9ff;
+      --border: #e2e8f0;
+      --border-focus: #cbd5e1;
+      --card-bg: #ffffff;
+      --card-bg-alt: #f8fafc;
+      --success: #059669;
+      --success-light: #ecfdf5;
+      
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-main);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: var(--text-secondary);
+      padding: 40px 24px;
+      line-height: 1.5;
+    }
+
+    /* ── Poster Shell ── */
+    .poster {
+      width: 820px;
+      background: var(--bg-poster);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: var(--shadow-xl);
+    }
+
+    /* Elegant, subtle pattern in background (dots) */
+    .poster::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(#e2e8f0 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+      opacity: 0.7;
+      pointer-events: none;
+    }
+
+    /* Decorative subtle corner accent lines */
+    .corner-line {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border: 2px solid transparent;
+      pointer-events: none;
+      opacity: 0.5;
+    }
+    .corner-top-left {
+      top: 24px;
+      left: 24px;
+      border-top-color: var(--primary);
+      border-left-color: var(--primary);
+    }
+    .corner-bottom-right {
+      bottom: 24px;
+      right: 24px;
+      border-bottom-color: var(--primary);
+      border-right-color: var(--primary);
+    }
+
+    /* ── Badge strip ── */
+    .badge-strip {
+      background: var(--primary);
+      padding: 10px 0;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      color: #ffffff;
+      text-transform: uppercase;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* ── Inner content ── */
+    .content {
+      padding: 48px 56px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── College Banner ── */
+    .college-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .college-logo {
+      height: 60px;
+      width: auto;
+      object-fit: contain;
+    }
+    .college-info {
+      text-align: left;
+    }
+    .college-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      line-height: 1.2;
+    }
+    .college-loc {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-light);
+      border: 1px solid rgba(30, 58, 138, 0.15);
+      border-radius: 4px;
+      padding: 6px 14px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    
+    .eyebrow .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      display: inline-block;
+    }
+
+    .headline {
+      font-size: 42px;
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+
+    .tagline {
+      font-size: 16px;
+      color: var(--text-muted);
+      font-weight: 400;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .tagline strong {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    /* ── Hero section ── */
+    .hero {
+      display: flex;
+      align-items: center;
+      gap: 40px;
+      margin-bottom: 40px;
+      background: var(--card-bg-alt);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+    }
+
+    /* Tank visual */
+    .tank-wrap {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .tank-outer {
+      width: 100px;
+      height: 160px;
+      border: 3px solid var(--text-primary);
+      border-radius: 6px 6px 10px 10px;
+      background: #ffffff;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .tank-fill {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 72%;
+      background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+      transition: height 0.5s ease;
+    }
+    .tank-fill::after {
+      content: '';
+      position: absolute;
+      top: -4px; left: 0; right: 0;
+      height: 8px;
+      background: #60a5fa;
+      opacity: 0.8;
+    }
+    .tank-pct {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 20px;
+      font-weight: 700;
+      color: #ffffff;
+      z-index: 2;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    }
+    .tank-level-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .sensor-top {
+      width: 64px;
+      height: 18px;
+      background: #334155;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+    .sensor-waves {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      margin-bottom: 2px;
+    }
+    .sw {
+      width: 24px;
+      height: 1.5px;
+      background: var(--accent);
+      opacity: 0.6;
+    }
+    .sw:nth-child(2) { width: 16px; opacity: 0.4; }
+    .sw:nth-child(3) { width: 10px; opacity: 0.2; }
+
+    /* Hero right — description */
+    .hero-desc {
+      flex: 1;
+    }
+    .hero-desc h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+    .hero-desc p {
+      font-size: 14.5px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .chip {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ── Section Dividers ── */
+    .section-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: var(--primary);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: flex;
+      justify-content: space-around;
+      background: var(--bg-poster);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 16px;
+      margin-bottom: 40px;
+      box-shadow: var(--shadow-sm);
+    }
+    .stat-item {
+      text-align: center;
+      flex: 1;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child {
+      border-right: none;
+    }
+    .stat-num {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--primary);
+      display: block;
+      margin-bottom: 2px;
+    }
+    .stat-lbl {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.2px;
+      text-transform: uppercase;
+    }
+
+    /* ── Daily-life section ── */
+    .daily-section {
+      margin-bottom: 40px;
+    }
+    .daily-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .daily-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    }
+    .daily-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-focus);
+    }
+    .daily-icon {
+      font-size: 24px;
+      margin-bottom: 12px;
+      display: inline-block;
+    }
+    .daily-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    .daily-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ── Feature grid ── */
+    .feature-section {
+      margin-bottom: 40px;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      box-shadow: var(--shadow-sm);
+    }
+    .feature-icon-wrap {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+    .fi-blue   { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; }
+    .fi-cyan   { background: #f0f9ff; color: #0369a1; border: 1px solid #e0f2fe; }
+    .fi-green  { background: #ecfdf5; color: #047857; border: 1px solid #d1fae5; }
+    .fi-purple { background: #faf5ff; color: #6b21a8; border: 1px solid #f3e8ff; }
+
+    .feature-text h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .feature-text p {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ── How it works ── */
+    .how-section {
+      margin-bottom: 44px;
+    }
+    .steps {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 4px;
+    }
+    .step {
+      flex: 1;
+      text-align: center;
+      padding: 0 8px;
+      position: relative;
+    }
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 12px;
+    }
+    .step-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .step-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .step-arrow {
+      width: 24px;
+      flex-shrink: 0;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 16px;
+      margin-top: 6px;
+      font-weight: bold;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-left h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .footer-left p {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .footer-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .fb {
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    .fb-outline {
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      background: #ffffff;
+    }
+    .fb-solid {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 0;
+      }
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      body {
+        background: #ffffff;
+        padding: 0;
+        margin: 0;
+        width: 210mm;
+      }
+      .poster {
+        width: 210mm;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+        position: relative;
+        padding: 0;
+      }
+      .poster::before {
+        display: none;
+      }
+      .corner-line {
+        display: none;
+      }
+      .content {
+        padding: 6mm 10mm;
+      }
+      .college-banner {
+        margin-bottom: 10px;
+        padding-bottom: 8px;
+      }
+      .college-logo {
+        height: 38px;
+      }
+      .college-name {
+        font-size: 12px;
+      }
+      .college-loc {
+        font-size: 9px;
+        margin-top: 1px;
+      }
+      .header {
+        margin-bottom: 12px;
+      }
+      .headline {
+        font-size: 24px;
+        margin-bottom: 4px;
+      }
+      .tagline {
+        font-size: 11px;
+      }
+      .hero {
+        padding: 12px 16px;
+        margin-bottom: 12px;
+        gap: 16px;
+      }
+      .tank-outer {
+        width: 64px;
+        height: 100px;
+      }
+      .tank-pct {
+        font-size: 13px;
+      }
+      .sensor-top {
+        width: 44px;
+        height: 12px;
+        font-size: 7px;
+      }
+      .hero-desc h2 {
+        font-size: 12.5px;
+        margin-bottom: 4px;
+      }
+      .hero-desc p {
+        font-size: 10px;
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+      .chip-row {
+        gap: 4px;
+      }
+      .chip {
+        padding: 3px 6px;
+        font-size: 8px;
+      }
+      .stats-bar {
+        padding: 8px 4px;
+        margin-bottom: 12px;
+      }
+      .stat-num {
+        font-size: 16px;
+        margin-bottom: 1px;
+      }
+      .stat-lbl {
+        font-size: 8px;
+      }
+      .section-label {
+        font-size: 10px;
+        margin-bottom: 8px;
+      }
+      .daily-section {
+        margin-bottom: 12px;
+      }
+      .daily-grid {
+        gap: 6px;
+      }
+      .daily-card {
+        padding: 8px 10px;
+        border-radius: 6px;
+      }
+      .daily-icon {
+        font-size: 14px;
+        margin-bottom: 2px;
+      }
+      .daily-title {
+        font-size: 10.5px;
+        margin-bottom: 2px;
+      }
+      .daily-desc {
+        font-size: 8.5px;
+        line-height: 1.35;
+      }
+      .feature-section {
+        margin-bottom: 12px;
+      }
+      .feature-grid {
+        gap: 6px;
+      }
+      .feature-card {
+        padding: 8px 10px;
+        border-radius: 6px;
+        gap: 8px;
+      }
+      .feature-icon-wrap {
+        width: 24px;
+        height: 24px;
+        font-size: 11px;
+        border-radius: 4px;
+      }
+      .feature-text h3 {
+        font-size: 10.5px;
+        margin-bottom: 2px;
+      }
+      .feature-text p {
+        font-size: 8.5px;
+        line-height: 1.35;
+      }
+      .how-section {
+        margin-bottom: 14px;
+      }
+      .step-num {
+        width: 18px;
+        height: 18px;
+        font-size: 8px;
+        margin-bottom: 4px;
+      }
+      .step-title {
+        font-size: 9.5px;
+      }
+      .step-desc {
+        font-size: 8px;
+        line-height: 1.3;
+      }
+      .step-arrow {
+        font-size: 9px;
+        margin-top: 2px;
+      }
+      .footer {
+        padding-top: 8px;
+      }
+      .footer-left h3 {
+        font-size: 10.5px;
+      }
+      .footer-left p {
+        font-size: 9px;
+      }
+      .fb {
+        padding: 3px 8px;
+        font-size: 8px;
+        border-radius: 2px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="poster">
+    <!-- Subtle corner line accents -->
+    <div class="corner-line corner-top-left"></div>
+    <div class="corner-line corner-bottom-right"></div>
+
+    <!-- Top Badge strip -->
+    <div class="badge-strip">IoT Academic Project • Semester 3 • NodeMCU ESP8266 &amp; HC-SR04</div>
+
+    <div class="content">
+
+      <!-- College Banner -->
+      <div class="college-banner">
+        <img src="college_logo.png" alt="St. Xavier's College Logo" class="college-logo">
+        <div class="college-info">
+          <h2 class="college-name">St. Xavier's College (Autonomous)</h2>
+          <p class="college-loc">Ahmedabad, Gujarat, India</p>
+        </div>
+      </div>
+
+      <!-- Header -->
+      <div class="header">
+        <div class="eyebrow">
+          <span class="dot"></span>
+          Smart Water Management
+        </div>
+        <h1 class="headline">Smart Water Tank Monitor</h1>
+        <p class="tagline">
+          An automated <strong>IoT system</strong> designed to prevent water overflow, save electricity, and provide real-time updates directly to your devices.
+        </p>
+      </div>
+
+      <!-- Hero Panel -->
+      <div class="hero">
+        <div class="tank-wrap">
+          <div class="sensor-top">HC-SR04</div>
+          <div class="sensor-waves">
+            <div class="sw"></div>
+            <div class="sw"></div>
+            <div class="sw"></div>
+          </div>
+          <div class="tank-outer">
+            <div class="tank-fill">
+              <span class="tank-pct">72%</span>
+            </div>
+          </div>
+          <span class="tank-level-label">Live Level</span>
+        </div>
+
+        <div class="hero-desc">
+          <h2>Core Functionality</h2>
+          <p>
+            This unit uses non-contact ultrasonic waves to detect the exact liquid levels in your tank. An intelligent automation controller monitors custom low and high thresholds, automatically switching a relay to manage the water pump. You get instant local alerts via a built-in buzzer and online visibility on a live web dashboard.
+          </p>
+          <div class="chip-row">
+            <span class="chip">NodeMCU WiFi</span>
+            <span class="chip">Ultrasonic Sensor</span>
+            <span class="chip">Relay Auto-Control</span>
+            <span class="chip">Piezo Buzzer Alert</span>
+            <span class="chip">Web Dashboard API</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Metrics Bar -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-num">24/7</span>
+          <span class="stat-lbl">Continuous Monitoring</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">±1 cm</span>
+          <span class="stat-lbl">Sensor Precision</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">100%</span>
+          <span class="stat-lbl">Automatic Operation</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-num">0</span>
+          <span class="stat-lbl">Manual Effort</span>
+        </div>
+      </div>
+
+      <!-- Daily Life Utility -->
+      <div class="daily-section">
+        <div class="section-label">Utility in Day-to-Day Life</div>
+        <div class="daily-grid">
+          <div class="daily-card">
+            <div class="daily-icon">🏠</div>
+            <div class="daily-title">Home Automation</div>
+            <div class="daily-desc">Ensures your household water tank is never empty by automatically refilling when levels drop below 20%.</div>
+          </div>
+          <div class="daily-card">
+            <div class="daily-icon">🌱</div>
+            <div class="daily-title">Resource Conservation</div>
+            <div class="daily-desc">Prevents tank overflows, stopping water wastage and significantly reducing monthly utility bills.</div>
+          </div>
+          <div class="daily-card">
+            <div class="daily-icon">📱</div>
+            <div class="daily-title">Instant Visibility</div>
+            <div class="daily-desc">Provides immediate status readouts from a phone or computer, eliminating the need to physically climb up.</div>
+          </div>
+          <div class="daily-card">
+            <div class="daily-icon">🚜</div>
+            <div class="daily-title">Agricultural Irrigation</div>
+            <div class="daily-desc">Maintains optimal storage tank levels automatically for livestock watering and drip-irrigation systems.</div>
+          </div>
+          <div class="daily-card">
+            <div class="daily-icon">🏥</div>
+            <div class="daily-title">Facilities &amp; Commercial</div>
+            <div class="daily-desc">Tracks water levels across clinics, offices, and multi-tenant blocks to ensure constant water supply.</div>
+          </div>
+          <div class="daily-card">
+            <div class="daily-icon">⚡</div>
+            <div class="daily-title">Pump Protection</div>
+            <div class="daily-desc">Shuts down the motor automatically when the source tank is empty, preventing pump dry-run damage.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Key Features -->
+      <div class="feature-section">
+        <div class="section-label">Technical Capabilities</div>
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon-wrap fi-cyan">💧</div>
+            <div class="feature-text">
+              <h3>Precision Sensor Reading</h3>
+              <p>Uses non-contact HC-SR04 sonic distance ranging for exact height calculations, unaffected by water impurities.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon-wrap fi-blue">⚙️</div>
+            <div class="feature-text">
+              <h3>Custom Control Thresholds</h3>
+              <p>Define exact start and stop percentages inside the code to manage pump activation and shut-off cycles.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon-wrap fi-green">🔔</div>
+            <div class="feature-text">
+              <h3>Local Alarm System</h3>
+              <p>A secondary physical buzzer sounds immediately if critical overflow or underflow boundaries are breached.</p>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon-wrap fi-purple">🌐</div>
+            <div class="feature-text">
+              <h3>Web UI &amp; REST Interface</h3>
+              <p>Transmits data packets over local Wi-Fi networks to sync a mobile-friendly dashboard in real-time.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- How it works flow -->
+      <div class="how-section">
+        <div class="section-label">Operational Workflow</div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-title">Measurement</div>
+            <div class="step-desc">Sensor fires sound pulse and measures echo bounce-back time.</div>
+          </div>
+          <div class="step-arrow">&#8594;</div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-title">Computation</div>
+            <div class="step-desc">NodeMCU translates the delay to distance and level percentage.</div>
+          </div>
+          <div class="step-arrow">&#8594;</div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-title">Decision</div>
+            <div class="step-desc">Relay turns pump ON if &lt;20% and OFF when level reaches &gt;90%.</div>
+          </div>
+          <div class="step-arrow">&#8594;</div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-title">Telemetry</div>
+            <div class="step-desc">Sensor metrics package is posted over HTTP to the backend server.</div>
+          </div>
+          <div class="step-arrow">&#8594;</div>
+          <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-title">User Portal</div>
+            <div class="step-desc">Status dashboard renders live statistics on your phone or PC screen.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <div class="footer-left">
+          <h3>💧 Smart Water Tank Monitor</h3>
+          <p>IoT Based Monitoring &amp; Control System &nbsp;|&nbsp; College Project</p>
+        </div>
+        <div class="footer-badges">
+          <span class="fb fb-outline">Hardware Prototype</span>
+          <span class="fb fb-solid">ESP8266 Project</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

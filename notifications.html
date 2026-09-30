@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Real-time Notification Center for the Smart Water Tank Monitor — view, filter, and manage all system alerts." />
+  <title>Notifications — Smart Water Tank Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    /* ── Notification Page Styles ── */
+    .notif-page-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Filter / Search toolbar */
+    .notif-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+    .notif-search {
+      flex: 1;
+      min-width: 180px;
+      max-width: 320px;
+      padding: 0.55rem 0.9rem 0.55rem 2.25rem;
+      border-radius: 999px;
+      border: 1px solid var(--border-glass);
+      background: #f8fafc;
+      font-size: 0.85rem;
+      color: var(--text-primary);
+      outline: none;
+      transition: var(--transition);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 24 24'%3E%3Cpath d='M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z' stroke='%2394a3b8' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: 0.7rem center;
+    }
+    .notif-search:focus { border-color: var(--primary); background-color: #fff; }
+
+    .filter-tabs {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+    .filter-tab {
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      border: 1px solid var(--border-glass);
+      background: #f1f5f9;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .filter-tab.active, .filter-tab:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .filter-tab.critical.active  { background: #dc2626; border-color: #dc2626; }
+    .filter-tab.warning.active   { background: #d97706; border-color: #d97706; }
+    .filter-tab.success.active   { background: #059669; border-color: #059669; }
+    .filter-tab.info.active      { background: #0284c7; border-color: #0284c7; }
+
+    .sort-select {
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-glass);
+      background: #f8fafc;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      outline: none;
+    }
+
+    /* Bulk actions */
+    .bulk-actions {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    /* Notification list */
+    .notif-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .notif-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.9rem;
+      padding: 1rem 1.1rem;
+      border-radius: 14px;
+      border: 1px solid var(--border-glass);
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(15,23,42,0.04);
+      transition: var(--transition);
+      position: relative;
+    }
+    .notif-card:hover { box-shadow: 0 4px 16px rgba(15,23,42,0.08); }
+    .notif-card.unread { background: #f0f9ff; border-color: rgba(2,132,199,0.18); }
+    .notif-card.unread .notif-title { color: #0f172a; }
+
+    /* Priority left bar */
+    .notif-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      border-radius: 14px 0 0 14px;
+    }
+    .notif-card.priority-critical::before { background: #dc2626; }
+    .notif-card.priority-warning::before  { background: #d97706; }
+    .notif-card.priority-success::before  { background: #059669; }
+    .notif-card.priority-info::before     { background: #0284c7; }
+
+    .notif-icon-wrap {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    .notif-icon-wrap.priority-critical { background: rgba(220,38,38,0.1); }
+    .notif-icon-wrap.priority-warning  { background: rgba(217,119,6,0.1); }
+    .notif-icon-wrap.priority-success  { background: rgba(5,150,105,0.1); }
+    .notif-icon-wrap.priority-info     { background: rgba(2,132,199,0.1); }
+
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+      line-height: 1.4;
+    }
+    .notif-msg {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 0.4rem;
+    }
+    .notif-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .notif-time {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+    .notif-priority-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .notif-priority-badge.priority-critical { background: rgba(220,38,38,0.12); color: #dc2626; }
+    .notif-priority-badge.priority-warning  { background: rgba(217,119,6,0.12);  color: #d97706; }
+    .notif-priority-badge.priority-success  { background: rgba(5,150,105,0.12);  color: #059669; }
+    .notif-priority-badge.priority-info     { background: rgba(2,132,199,0.12);  color: #0284c7; }
+    .notif-unread-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: inline-block;
+      flex-shrink: 0;
+    }
+
+    .notif-actions {
+      display: flex;
+      gap: 0.4rem;
+      flex-shrink: 0;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+    .notif-action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      padding: 3px 8px;
+      border-radius: 6px;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .notif-action-btn:hover { background: rgba(15,23,42,0.06); color: var(--text-primary); }
+    .notif-action-btn.delete:hover { color: #dc2626; background: rgba(220,38,38,0.07); }
+
+    /* Stats bar */
+    .notif-stats-bar {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.25rem;
+    }
+    .notif-stat {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid;
+    }
+    .notif-stat.total    { background: rgba(2,132,199,0.07);   color: #0284c7;   border-color: rgba(2,132,199,0.2); }
+    .notif-stat.unread   { background: rgba(220,38,38,0.07);   color: #dc2626;   border-color: rgba(220,38,38,0.2); }
+    .notif-stat.critical { background: rgba(220,38,38,0.07);   color: #dc2626;   border-color: rgba(220,38,38,0.2); }
+    .notif-stat.warning  { background: rgba(217,119,6,0.07);   color: #d97706;   border-color: rgba(217,119,6,0.2); }
+    .notif-stat.success  { background: rgba(5,150,105,0.07);   color: #059669;   border-color: rgba(5,150,105,0.2); }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .page-btn {
+      min-width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border-glass);
+      background: #fff;
+      color: var(--text-secondary);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .page-btn:hover, .page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .page-info { font-size: 0.8rem; color: var(--text-muted); }
+
+    /* Empty state */
+    .notif-empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+    .notif-empty-icon { font-size: 3rem; margin-bottom: 0.75rem; opacity: 0.5; }
+    .notif-empty p { font-size: 0.88rem; line-height: 1.6; }
+
+    /* Live badge */
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(5,150,105,0.08);
+      border: 1px solid rgba(5,150,105,0.25);
+      color: #059669;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .live-badge .live-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: #059669;
+      animation: pulse-dot 2s infinite;
+    }
+
+    /* Toast for new real-time notifications */
+    .toast-container {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      max-width: 340px;
+    }
+    .toast {
+      padding: 0.9rem 1.1rem;
+      border-radius: 12px;
+      border-left: 4px solid;
+      background: #fff;
+      box-shadow: 0 8px 24px rgba(15,23,42,0.14);
+      font-size: 0.83rem;
+      animation: slideIn 0.3s ease, fadeOut 0.4s ease 4.6s forwards;
+    }
+    .toast.priority-critical { border-color: #dc2626; }
+    .toast.priority-warning  { border-color: #d97706; }
+    .toast.priority-success  { border-color: #059669; }
+    .toast.priority-info     { border-color: #0284c7; }
+    .toast-title { font-weight: 700; color: #0f172a; margin-bottom: 3px; }
+    .toast-msg   { color: var(--text-secondary); }
+    @keyframes slideIn  { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeOut  { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
+  </style>
+</head>
+<body>
+<div class="app-container">
+
+  <!-- ===== SIDEBAR (Desktop) ===== -->
+  <nav class="sidebar" aria-label="Primary navigation">
+    <div class="brand-section">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6 8 4 12 4 14a8 8 0 0 0 16 0c0-2-2-6-8-12z"/></svg>
+      <div>
+        <p class="brand-title">AquaMonitor</p>
+      </div>
+    </div>
+    <ul class="nav-menu" role="list">
+      <li class="nav-item" role="listitem"><a href="index.html" aria-label="Dashboard"><span class="nav-icon">💧</span><span>Dashboard</span></a></li>
+      <li class="nav-item" role="listitem"><a href="controls.html" aria-label="Controls"><span class="nav-icon">⚙️</span><span>Controls</span></a></li>
+      <li class="nav-item" role="listitem"><a href="logs.html" aria-label="Activity Logs"><span class="nav-icon">📋</span><span>Activity Logs</span></a></li>
+      <li class="nav-item" role="listitem"><a href="hardware.html" aria-label="Hardware"><span class="nav-icon">🔧</span><span>Hardware</span></a></li>
+      <li class="nav-item active" role="listitem"><a href="notifications.html" aria-current="page" aria-label="Notifications"><span class="nav-icon">🔔</span><span>Notifications</span></a></li>
+      <li class="nav-item" role="listitem"><a href="project.html" aria-label="Project Info"><span class="nav-icon">📁</span><span>Project Info</span></a></li>
+    </ul>
+    <div class="sidebar-footer">
+      <p>IoT Sem 3 · College Project</p>
+      <p style="margin-top:4px; opacity:0.6;">NodeMCU ESP8266</p>
+    </div>
+  </nav>
+
+  <!-- ===== BOTTOM NAV (Mobile) ===== -->
+  <nav class="bottom-nav" aria-label="Mobile navigation">
+    <a href="index.html" class="bottom-nav-item" aria-label="Dashboard"><span class="nav-icon">💧</span><span>Dashboard</span></a>
+    <a href="controls.html" class="bottom-nav-item" aria-label="Controls"><span class="nav-icon">⚙️</span><span>Controls</span></a>
+    <a href="logs.html" class="bottom-nav-item" aria-label="Activity Logs"><span class="nav-icon">📋</span><span>Logs</span></a>
+    <a href="notifications.html" class="bottom-nav-item active" aria-current="page" aria-label="Notifications"><span class="nav-icon">🔔</span><span>Alerts</span></a>
+  </nav>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content" id="main-content">
+
+    <!-- Header -->
+    <div class="notif-page-header">
+      <div>
+        <h1 class="page-title">🔔 Notifications</h1>
+        <p style="font-size:0.83rem; color:var(--text-muted); margin-top:4px;">Real-time system alerts from your water tank monitor.</p>
+      </div>
+      <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+        <span class="live-badge" id="socket-badge"><span class="live-dot"></span> Connecting…</span>
+        <div class="status-badge" id="connection-badge" role="status" aria-live="polite">
+          <span class="status-dot demo" id="connection-dot"></span>
+          <span id="connection-text">Demo Mode</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="notif-stats-bar" id="notif-stats-bar">
+      <span class="notif-stat total">📊 Total: <strong id="stat-total">—</strong></span>
+      <span class="notif-stat unread">🔴 Unread: <strong id="stat-unread">—</strong></span>
+      <span class="notif-stat critical">🚨 Critical: <strong id="stat-critical">—</strong></span>
+      <span class="notif-stat warning">⚠️ Warning: <strong id="stat-warning">—</strong></span>
+      <span class="notif-stat success">✅ Success: <strong id="stat-success">—</strong></span>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="notif-toolbar">
+      <input
+        type="search"
+        id="notif-search"
+        class="notif-search"
+        placeholder="Search notifications…"
+        aria-label="Search notifications"
+        oninput="onSearch()"
+      />
+
+      <div class="filter-tabs" role="tablist" aria-label="Filter by priority">
+        <button class="filter-tab active"    data-filter="all"      onclick="setFilter('all',      this)" role="tab" aria-selected="true">All</button>
+        <button class="filter-tab critical"  data-filter="critical" onclick="setFilter('critical', this)" role="tab">🔴 Critical</button>
+        <button class="filter-tab warning"   data-filter="warning"  onclick="setFilter('warning',  this)" role="tab">🟠 Warning</button>
+        <button class="filter-tab success"   data-filter="success"  onclick="setFilter('success',  this)" role="tab">🟢 Success</button>
+        <button class="filter-tab info"      data-filter="info"     onclick="setFilter('info',     this)" role="tab">🔵 Info</button>
+      </div>
+
+      <select class="sort-select" id="sort-select" onchange="onSortChange()" aria-label="Sort order">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+      </select>
+    </div>
+
+    <!-- Bulk actions -->
+    <div class="bulk-actions" style="margin-bottom:1.25rem;">
+      <button class="btn-secondary" style="font-size:0.8rem; padding:0.45rem 1rem;" onclick="markAllRead()" id="mark-all-btn">
+        ✅ Mark All as Read
+      </button>
+      <button class="btn-danger" style="font-size:0.8rem; padding:0.45rem 1rem;" onclick="clearAllNotifications()" id="clear-all-btn">
+        🗑️ Clear All
+      </button>
+      <span id="bulk-feedback" style="font-size:0.8rem; color:var(--text-muted); align-self:center;"></span>
+    </div>
+
+    <!-- Notification List Card -->
+    <div class="card" style="padding:0; overflow:hidden;">
+      <div id="notif-list-inner" style="padding:1rem;">
+        <div class="notif-empty">
+          <div class="notif-empty-icon">⏳</div>
+          <p>Loading notifications…</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" id="pagination" style="display:none;"></div>
+
+  </main>
+</div>
+
+<!-- Toast container for real-time toasts -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Socket.IO client -->
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script src="notifications.js"></script>
+</body>
+</html>

@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Controls & Settings — IoT Smart Water Tank Monitor. Manage pump control, auto thresholds, daily schedule and push notifications." />
+  <title>Controls — Smart Water Tank Monitor</title>
+
+  <!-- Google Fonts: Plus Jakarta Sans + Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="style.css?v=4" />
+  <link rel="manifest" href="/manifest.json" />
+</head>
+<body>
+
+<div class="app-container">
+
+  <!-- ===== SIDEBAR NAVIGATION (Desktop) ===== -->
+  <nav class="sidebar" aria-label="Main Navigation">
+    <div class="brand-section">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6 8 4 12 4 14a8 8 0 0 0 16 0c0-2-2-6-8-12z"/></svg>
+      <div>
+        <p class="brand-title">AquaMonitor</p>
+      </div>
+    </div>
+
+    <ul class="nav-menu">
+      <li class="nav-item">
+        <a href="index.html" aria-label="Go to Dashboard">
+          <span class="nav-icon">💧</span>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      <li class="nav-item active">
+        <a href="controls.html" aria-label="Controls and Settings (current page)" aria-current="page">
+          <span class="nav-icon">⚙️</span>
+          <span>Controls</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="logs.html" aria-label="Go to Activity Logs">
+          <span class="nav-icon">📋</span>
+          <span>Activity Logs</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="hardware.html" aria-label="Go to Hardware">
+          <span class="nav-icon">🔧</span>
+          <span>Hardware</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="notifications.html" aria-label="Go to Notifications">
+          <span class="nav-icon">🔔</span>
+          <span>Notifications</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="project.html" aria-label="Go to Project Info">
+          <span class="nav-icon">📁</span>
+          <span>Project Info</span>
+        </a>
+      </li>
+    </ul>
+
+    <div class="sidebar-footer">
+      <p>Smart Water Tank Monitor</p>
+      <p style="margin-top:4px;">Semester 3 · IoT Project</p>
+    </div>
+  </nav>
+
+  <!-- ===== BOTTOM NAVIGATION (Mobile) ===== -->
+  <nav class="bottom-nav" aria-label="Mobile Navigation">
+    <a href="index.html" class="bottom-nav-item" aria-label="Dashboard">
+      <span class="nav-icon">💧</span>
+      <span>Dashboard</span>
+    </a>
+    <a href="controls.html" class="bottom-nav-item active" aria-label="Controls (current page)" aria-current="page">
+      <span class="nav-icon">⚙️</span>
+      <span>Controls</span>
+    </a>
+    <a href="logs.html" class="bottom-nav-item" aria-label="Activity Logs">
+      <span class="nav-icon">📋</span>
+      <span>Logs</span>
+    </a>
+    <a href="notifications.html" class="bottom-nav-item" aria-label="Notifications">
+      <span class="nav-icon">🔔</span>
+      <span>Alerts</span>
+    </a>
+  </nav>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <main class="main-content" id="main-content">
+
+    <!-- Page Header -->
+    <header class="page-header">
+      <div>
+        <h1 class="page-title">⚙️ Controls &amp; Settings</h1>
+        <p style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">
+          Manage pump behaviour, thresholds, schedule, and notifications.
+        </p>
+      </div>
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <a href="notifications.html" class="bell-btn" aria-label="View notifications">
+          🔔
+          <span class="bell-badge" style="display:none;">0</span>
+        </a>
+        <div class="status-badge" id="connection-badge" aria-live="polite">
+          <span class="status-dot demo" id="connection-dot"></span>
+          <span id="connection-text">Demo Mode</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== ROW 1: Manual Control + Auto Threshold (2 columns) ===== -->
+    <div class="settings-layout">
+
+      <!-- Card 1: Manual Pump Control -->
+      <section class="card" aria-labelledby="manual-control-title">
+        <p class="card-title" id="manual-control-title">🔧 Manual Pump Control</p>
+        <p style="font-size:0.83rem; color:var(--text-secondary); margin-bottom:1.25rem; line-height:1.6;">
+          Manually override the pump. Enabling manual control will pause automatic threshold logic.
+        </p>
+
+        <!-- Current Status Row -->
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:0.75rem;">
+          <div>
+            <p style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:600; margin-bottom:4px;">
+              Current Pump Status
+            </p>
+            <p id="control-label" style="font-size:1.05rem; font-weight:700; color:var(--text-primary);">
+              Pump is idle
+            </p>
+          </div>
+          <button
+            class="btn-primary"
+            id="motor-toggle-btn"
+            onclick="toggleMotor()"
+            aria-label="Toggle pump ON or OFF"
+          >
+            Turn ON Pump
+          </button>
+        </div>
+
+        <!-- Mode indicator strip -->
+        <div style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.02); border:1px solid var(--border-glass); border-radius:var(--radius-sm); padding:0.65rem 1rem; margin-bottom:0.75rem;">
+          <span id="mode-dot" style="width:8px; height:8px; border-radius:50%; background:var(--text-muted); display:inline-block; flex-shrink:0;"></span>
+          <span id="mode-label" style="font-size:0.8rem; color:var(--text-secondary);">
+            Mode: <strong style="color:var(--text-primary);" id="mode-value">Auto</strong>
+          </span>
+        </div>
+
+        <p id="settings-feedback" class="input-feedback" style="margin-top:0.5rem;" aria-live="polite"></p>
+      </section>
+
+      <!-- Card 2: Auto Threshold Settings -->
+      <section class="card" aria-labelledby="threshold-title">
+        <p class="card-title" id="threshold-title">⚡ Auto-Control Thresholds</p>
+        <p style="font-size:0.83rem; color:var(--text-secondary); margin-bottom:1.25rem; line-height:1.6;">
+          Pump starts below the <strong style="color:var(--text-primary);">Start</strong> threshold and stops above the
+          <strong style="color:var(--text-primary);">Stop</strong> threshold automatically.
+        </p>
+
+        <div class="settings-group">
+          <!-- Start Threshold -->
+          <div class="control-item">
+            <label for="input-start-threshold">
+              Start Pump Below (%) <span style="font-size:0.75rem; font-weight:normal; color:var(--text-muted);">(10% – 50%)</span>
+            </label>
+            <input
+              type="number"
+              id="input-start-threshold"
+              min="10"
+              max="50"
+              maxlength="2"
+              value="20"
+              oninput="handleThresholdInput(this, 10, 50)"
+              aria-label="Start pump below this water percentage (10 to 50)"
+            />
+          </div>
+
+          <!-- Stop Threshold -->
+          <div class="control-item">
+            <label for="input-stop-threshold">
+              Stop Pump Above (%) <span style="font-size:0.75rem; font-weight:normal; color:var(--text-muted);">(51% – 90% Sensor Safety Limit)</span>
+            </label>
+            <input
+              type="number"
+              id="input-stop-threshold"
+              min="51"
+              max="90"
+              maxlength="2"
+              value="90"
+              oninput="handleThresholdInput(this, 51, 90)"
+              aria-label="Stop pump above this water percentage (51 to 90)"
+            />
+          </div>
+        </div>
+
+        <!-- Active threshold note & Safety warning -->
+        <p id="auto-note" style="margin-top:1rem; font-size:0.8rem; color:var(--text-muted); background:var(--bg-input); border:1px solid var(--border); border-radius:var(--radius-sm); padding:0.6rem 0.9rem;">
+          ⚡ Auto-mode: Pump ON below <strong id="note-start" style="color:var(--primary);">20%</strong>,
+          OFF above <strong id="note-stop" style="color:var(--primary);">90%</strong>.
+          <br><span style="font-size:0.75rem; color:var(--text-secondary); margin-top:3px; display:inline-block;">🛡️ <em>Rule: Start is limited to 10%–50%. Stop is strictly 51%–90% to prevent water damage to HC-SR04 ultrasonic sensor.</em></span>
+        </p>
+
+        <div style="display:flex; align-items:center; gap:1rem; margin-top:1.25rem; flex-wrap:wrap;">
+          <button
+            class="btn-primary"
+            id="save-settings-btn"
+            onclick="saveSettings()"
+            aria-label="Save threshold settings"
+          >
+            💾 Save Thresholds
+          </button>
+          <span id="threshold-feedback" class="input-feedback" aria-live="polite"></span>
+        </div>
+      </section>
+
+    </div><!-- /settings-layout -->
+
+    <!-- ===== ROW 2: Daily Schedule (Full Width) ===== -->
+    <section class="card" style="margin-top:2rem;" aria-labelledby="schedule-title">
+      <p class="card-title" id="schedule-title">📅 Time Management — Daily Schedule</p>
+      <p style="font-size:0.83rem; color:var(--text-secondary); margin-bottom:1.25rem; line-height:1.6;">
+        Schedule a daily automatic pump cycle. The pump will start at the configured time and fill the tank in
+        auto mode (stops when full). Perfect for timed municipal water supply windows.
+      </p>
+
+      <!-- Toggle Row -->
+      <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1.25rem;">
+        <label class="switch" for="schedule-enabled-toggle" aria-label="Enable or disable daily schedule">
+          <input
+            type="checkbox"
+            id="schedule-enabled-toggle"
+            onchange="toggleSchedule()"
+          />
+          <span class="slider-toggle"></span>
+        </label>
+        <span
+          id="schedule-toggle-label"
+          style="font-size:0.95rem; font-weight:600; color:var(--text-primary);"
+          aria-live="polite"
+        >
+          Daily Schedule is OFF
+        </span>
+      </div>
+
+      <!-- Time Picker -->
+      <div style="max-width:320px; margin-bottom:1.25rem;">
+        <div class="control-item">
+          <label for="input-schedule-time" style="display:block; margin-bottom:4px;">
+            Run Pump Daily At <span style="color:var(--text-muted); font-weight:400;">(24-hour format)</span>
+          </label>
+          <input
+            type="time"
+            id="input-schedule-time"
+            value="05:00"
+            onchange="onScheduleTimeChange()"
+            aria-label="Daily schedule time in 24-hour format"
+          />
+        </div>
+      </div>
+
+      <!-- Save + Feedback -->
+      <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1rem;">
+        <button
+          class="btn-primary"
+          id="save-schedule-btn"
+          onclick="saveScheduleSettings()"
+          aria-label="Save daily schedule settings"
+        >
+          💾 Save Schedule
+        </button>
+        <span id="schedule-feedback" class="input-feedback" aria-live="polite"></span>
+      </div>
+
+      <!-- Schedule status note -->
+      <p
+        id="schedule-note"
+        style="font-size:0.82rem; color:var(--text-muted); background:rgba(255,255,255,0.02); border:1px solid var(--border-glass); border-radius:var(--radius-sm); padding:0.6rem 0.9rem; display:inline-block;"
+        aria-live="polite"
+      >
+        📅 Daily Schedule is disabled.
+      </p>
+    </section>
+
+    <!-- ===== ROW 3: Push Notifications (Full Width) ===== -->
+    <section class="card" style="margin-top:2rem;" aria-labelledby="notif-title" id="notifications-section">
+      <p class="card-title" id="notif-title">🔔 Push Notifications</p>
+      <p style="font-size:0.83rem; color:var(--text-secondary); margin-bottom:1.25rem; line-height:1.6;">
+        Receive instant browser alerts even when this tab is closed — for low water, full tank,
+        motor stall, and daily schedule triggers.
+      </p>
+
+      <!-- Status + Toggle Button -->
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem; margin-bottom:1.25rem;">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <span class="notif-dot notif-dot-idle" id="notif-dot" aria-hidden="true"></span>
+          <span id="notif-status-label" style="font-size:0.9rem; color:var(--text-secondary);" aria-live="polite">
+            Checking…
+          </span>
+        </div>
+        <button
+          class="btn-primary"
+          id="notif-toggle-btn"
+          onclick="handleNotifToggle()"
+          disabled
+          aria-label="Enable or disable push notifications"
+        >
+          Enable Alerts
+        </button>
+      </div>
+
+      <!-- Notification types info box -->
+      <div
+        role="list"
+        style="display:flex; flex-direction:column; gap:0.65rem; background:rgba(255,255,255,0.02); border:1px solid var(--border-glass); border-radius:var(--radius-md); padding:1.1rem 1.25rem;"
+      >
+        <div role="listitem" style="font-size:0.85rem; color:var(--text-secondary); display:flex; align-items:center; gap:10px;">
+          <span aria-hidden="true">💧</span>
+          <span>
+            <strong style="color:var(--text-primary);">Low water</strong>
+            — drops below the Start threshold
+          </span>
+        </div>
+        <div role="listitem" style="font-size:0.85rem; color:var(--text-secondary); display:flex; align-items:center; gap:10px;">
+          <span aria-hidden="true">🔔</span>
+          <span>
+            <strong style="color:var(--text-primary);">Tank full</strong>
+            — rises above the Stop threshold
+          </span>
+        </div>
+        <div role="listitem" style="font-size:0.85rem; color:var(--text-secondary); display:flex; align-items:center; gap:10px;">
+          <span aria-hidden="true">⚠️</span>
+          <span>
+            <strong style="color:var(--text-primary);">Motor stall</strong>
+            — pump runs 10+ min without filling
+          </span>
+        </div>
+        <div role="listitem" style="font-size:0.85rem; color:var(--text-secondary); display:flex; align-items:center; gap:10px;">
+          <span aria-hidden="true">📅</span>
+          <span>
+            <strong style="color:var(--text-primary);">Daily Schedule</strong>
+            — when the daily pump cycle starts
+          </span>
+        </div>
+      </div>
+
+      <p id="notif-feedback" class="input-feedback" style="margin-top:0.75rem;" aria-live="polite"></p>
+      <p class="notif-note" id="notif-browser-note" style="display:none; margin-top:0.75rem; font-size:0.8rem; color:var(--text-muted);"></p>
+    </section>
+
+  </main><!-- /main-content -->
+
+</div><!-- /app-container -->
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="common.js"></script>
+<script src="controls.js"></script>
+</body>
+</html>
+
