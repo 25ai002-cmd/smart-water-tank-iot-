@@ -153,6 +153,17 @@ function applyDashboardData(data) {
   setTextContent('d-water-pct',    Math.round(pct) + '%');
   setTextContent('d-last-update',  data.sensor.timestamp ? formatTimestamp(data.sensor.timestamp) : getCurrentTime());
 
+  // Node ESP Connection status in details table
+  const isEspConnected = data.hardware ? data.hardware.connected : (state.hardware ? state.hardware.connected : false);
+  const espStatusEl = document.getElementById('d-esp-status');
+  if (espStatusEl) {
+    if (isEspConnected) {
+      espStatusEl.innerHTML = '<span class="badge-pill on" style="color:#10b981; font-weight:700;">🟢 Connected &amp; Syncing</span>';
+    } else {
+      espStatusEl.innerHTML = '<span class="badge-pill off" style="color:#ef4444; background:rgba(239,68,68,0.1); border-color:rgba(239,68,68,0.3); font-weight:700;">🔴 Not Connected</span>';
+    }
+  }
+
   // 3. Motor status
   const motorCard       = document.getElementById('motor-card');
   const motorStatusText = document.getElementById('motor-status-text');
@@ -213,12 +224,16 @@ function applyDashboardData(data) {
     if (buzzerStatusText) buzzerStatusText.textContent = isOn ? 'ACTIVE' : 'OFF';
   }
 
-  // 5. Alert banner
-  const alertLevel   = data.alert ? data.alert.level : getLocalAlertLevel(pct);
-  const alertMessage = data.alert ? data.alert.message : getLocalAlertMsg(pct);
-  setAlertBanner(alertLevel, alertMessage);
+  // 5. Alert banner — prioritize Node ESP disconnected message
+  if (!isEspConnected && state.apiMode) {
+    setAlertBanner('critical', '⚠️ Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.');
+  } else {
+    const alertLevel   = data.alert ? data.alert.level : getLocalAlertLevel(pct);
+    const alertMessage = data.alert ? data.alert.message : getLocalAlertMsg(pct);
+    setAlertBanner(alertLevel, alertMessage);
+  }
 
-  // 5. Toggle Demo Slider visibility (hide it when live server is active)
+  // 6. Toggle Demo Slider visibility (hide it when live server is active)
   const demoSection = document.getElementById('demo-section');
   if (demoSection) {
     demoSection.style.display = state.apiMode ? 'none' : 'block';
@@ -252,9 +267,9 @@ function setAlertBanner(level, message) {
 
   banner.className = 'alert-banner';
 
-  if (level === 'critical' || level === 'empty' || message.includes('Resource Empty') || message.includes('Source Empty')) {
+  if (level === 'critical' || level === 'empty' || message.includes('Resource Empty') || message.includes('not connected') || message.includes('Not Connected') || message.includes('Source Empty')) {
     banner.classList.add('alert-low');
-    if (iconWrap) iconWrap.innerHTML = `<span style="font-size:1.1rem; line-height:1;">🚨</span>`;
+    if (iconWrap) iconWrap.innerHTML = `<span style="font-size:1.1rem; line-height:1;">⚠️</span>`;
     if (text) text.innerHTML = `<span style="color:#ef4444; font-weight:700;">${message}</span>`;
     return;
   }

@@ -263,7 +263,8 @@ function addHistory(db, sensorDistance, waterLevel, waterPercentage, motorOn, bu
    SMART NOTIFICATION ENGINE
    ================================================== */
 
-let lastSensorTimestamp = null; // track sensor timeout (30s)
+let lastSensorTimestamp = null; // track sensor timeout (15s)
+let lastKnownHardwareConnected = null; // track connection transitions (NodeMCU ESP8266)
 let stopConsecutiveHits  = 0;    // debounce counter for motor auto-stop at target threshold
 
 /**
@@ -697,7 +698,26 @@ app.post('/api/sensor', (req, res) => {
   }
   // ─────────────────────────────────────────────────
 
+  const wasDisconnected = (lastKnownHardwareConnected === false || lastKnownHardwareConnected === null);
+  lastKnownHardwareConnected = true;
   lastSensorTimestamp = new Date().toISOString();
+
+  resolveNotification(db, 'node_esp_disconnected');
+  resolveNotification(db, 'sensor_timeout');
+
+  if (wasDisconnected) {
+    const connNotif = createNotification(db, {
+      type:     'node_esp_connected',
+      title:    '🟢 Node ESP Connected',
+      message:  'NodeMCU ESP8266 connected and syncing sensor data successfully.',
+      priority: 'success',
+    });
+    if (connNotif) {
+      broadcastNotification(connNotif);
+      broadcastUnreadCount(db.notifications.filter(x => !x.isRead).length);
+    }
+  }
+
   writeDB(db);
 
   // ── ALERT OVERRIDE: resource-empty / dry-run takes highest priority ──────
@@ -744,8 +764,17 @@ app.get('/api/status', (req, res) => {
   const pct = db.sensor.waterPercentage;
   const buzzerLow  = db.settings ? db.settings.buzzerLowThreshold  : 20;
   const buzzerHigh = db.settings ? db.settings.buzzerHighThreshold : 90;
+
+  const localIps = getLocalIPs();
+  const lastSeenMs = lastSensorTimestamp ? new Date(lastSensorTimestamp).getTime() : null;
+  const secAgo = lastSeenMs ? Math.floor((Date.now() - lastSeenMs) / 1000) : null;
+  const hardwareConnected = secAgo !== null && secAgo <= 15;
+
   let alertLevel, alertMessage;
-  if (db.motor.sourceEmpty || (db.notificationState.source_empty && db.notificationState.source_empty.active)) {
+  if (!hardwareConnected) {
+    alertLevel   = 'critical';
+    alertMessage = '⚠️ Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.';
+  } else if (db.motor.sourceEmpty || (db.notificationState.source_empty && db.notificationState.source_empty.active)) {
     alertLevel   = 'low';
     alertMessage = '🚨 Resource Empty — Motor stopped to prevent dry-run damage. Refill resource tank.';
   } else if (pct < buzzerLow) {
@@ -757,11 +786,6 @@ app.get('/api/status', (req, res) => {
   }
 
   const unreadCount = db.notifications.filter(n => !n.isRead).length;
-
-  const localIps = getLocalIPs();
-  const lastSeenMs = lastSensorTimestamp ? new Date(lastSensorTimestamp).getTime() : null;
-  const secAgo = lastSeenMs ? Math.floor((Date.now() - lastSeenMs) / 1000) : null;
-  const hardwareConnected = secAgo !== null && secAgo <= 15;
 
   res.json({
     sensor: db.sensor,
@@ -1024,17 +1048,23 @@ setInterval(() => {
 
 
 /* ==================================================
-   SENSOR TIMEOUT CHECKER (every 15 seconds)
+   NODE ESP & SENSOR TIMEOUT CHECKER (every 3 seconds)
    ================================================== */
 setInterval(() => {
-  if (!lastSensorTimestamp) return;
-  const secSince = (Date.now() - new Date(lastSensorTimestamp).getTime()) / 1000;
-  if (secSince > 30) {
-    const db = readDB();
-    const n  = createNotification(db, {
-      type:     'sensor_timeout',
-      title:    '⚠️ Sensor Timeout',
-      message:  'No sensor data received for more than 30 seconds. Please check the sensor connection.',
+  const now = Date.now();
+  const lastSeenMs = lastSensorTimestamp ? new Date(lastSensorTimestamp).getTime() : null;
+  const secSince = lastSeenMs ? (now - lastSeenMs) / 1000 : Infinity;
+  const isConnected = secSince <= 15;
+
+  const db = readDB();
+
+  if (!isConnected) {
+    const n = createNotification(db, {
+      type:     'node_esp_disconnected',
+      title:    '⚠️ Node ESP Not Connected',
+      message:  lastSensorTimestamp
+        ? `NodeMCU ESP8266 is not connected! No sensor data received for ${Math.round(secSince)}s. Check ESP power and Wi-Fi connection.`
+        : 'NodeMCU ESP8266 is not connected. Awaiting sensor data from hardware.',
       priority: 'critical',
     });
     if (n) {
@@ -1042,8 +1072,24 @@ setInterval(() => {
       broadcastUnreadCount(db.notifications.filter(x => !x.isRead).length);
       writeDB(db);
     }
+
+    if (lastKnownHardwareConnected !== false) {
+      lastKnownHardwareConnected = false;
+      const localIps = getLocalIPs();
+      io.emit('hardware:status', {
+        connected: false,
+        lastSeen: lastSensorTimestamp,
+        secondsAgo: lastSeenMs ? Math.round(secSince) : null,
+        message: 'Node ESP is not connected',
+        serverIps: localIps,
+      });
+      io.emit('alert:update', {
+        level: 'critical',
+        message: '⚠️ Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.',
+      });
+    }
   }
-}, 15000);
+}, 3000);
 
 
 /* ==================================================
@@ -1072,8 +1118,12 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`║  Swagger API Docs →  http://localhost:${PORT}/api-docs           ║`);
   console.log('╚══════════════════════════════════════════════════════════════╝\n');
 
-  // Start public internet tunnel for remote phone access (4G/5G/Different Wi-Fi)
-  initPublicTunnel();
+  // Start public internet tunnel for remote phone access when running locally
+  if (!process.env.RENDER) {
+    initPublicTunnel();
+  } else if (process.env.RENDER_EXTERNAL_URL) {
+    publicTunnelUrl = process.env.RENDER_EXTERNAL_URL;
+  }
 
   console.log('  Press Ctrl+C to stop the server.\n');
 });

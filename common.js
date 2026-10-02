@@ -126,8 +126,30 @@ function initSocketBell() {
     socket.on('sensor:data', (data) => {
       if (data) {
         state.apiMode = true;
-        setConnectionStatus('live');
         applySharedData(data);
+        setConnectionStatus('live');
+      }
+    });
+    socket.on('hardware:status', (hw) => {
+      if (hw) {
+        if (!state.hardware) state.hardware = {};
+        Object.assign(state.hardware, hw);
+        updateHardwareUI(state.hardware);
+        setConnectionStatus('live');
+        if (!hw.connected) {
+          statusListeners.forEach(listener => listener({
+            alert: {
+              level: 'critical',
+              message: '⚠️ Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.'
+            },
+            hardware: state.hardware
+          }));
+        }
+      }
+    });
+    socket.on('alert:update', (alertData) => {
+      if (alertData) {
+        statusListeners.forEach(listener => listener({ alert: alertData }));
       }
     });
     socket.on('notification:new', () => {
@@ -215,13 +237,18 @@ function setConnectionStatus(status) {
 
   dot.className = 'status-dot';
   if (status === 'live') {
-    dot.classList.add('live');
-    label.textContent = state.hardware && state.hardware.connected
-      ? 'Hardware Syncing'
-      : 'Server Online';
+    if (state.hardware && state.hardware.connected) {
+      dot.classList.add('live');
+      label.textContent = 'Node ESP Connected';
+      label.title = 'NodeMCU ESP8266 is actively sending sensor data';
+    } else {
+      dot.classList.add('node-disconnected');
+      label.textContent = 'Node ESP Not Connected';
+      label.title = 'NodeMCU ESP8266 is not connected to the server';
+    }
   } else {
-    dot.classList.add('demo');
-    label.textContent = status === 'disconnected' ? 'Reconnecting…' : 'Server Offline';
+    dot.classList.add('server-offline');
+    label.textContent = status === 'disconnected' ? 'Server Offline' : 'Node ESP Not Connected';
   }
 }
 
@@ -235,17 +262,20 @@ function updateHardwareUI(hw) {
   const hwIpContainer = document.getElementById('hw-server-ips');
 
   if (hwDot) {
-    hwDot.className = 'status-dot ' + (hw.connected ? 'live' : 'demo');
+    hwDot.className = 'status-dot ' + (hw.connected ? 'live' : 'node-disconnected');
   }
   if (hwBadge) {
-    hwBadge.textContent = hw.connected ? '🟢 Hardware Connected & Syncing' : '🔴 Hardware Disconnected / Standby';
-    hwBadge.style.color = hw.connected ? '#10b981' : '#f59e0b';
+    hwBadge.innerHTML = hw.connected
+      ? '<span style="color:#10b981; font-weight:700;">🟢 Node ESP Connected &amp; Syncing</span>'
+      : '<span style="color:#ef4444; font-weight:700;">🔴 Node ESP Not Connected</span>';
   }
   if (hwTime) {
     if (hw.lastSeen) {
-      hwTime.textContent = `${hw.secondsAgo}s ago (${formatTimestamp(hw.lastSeen)})`;
+      hwTime.textContent = hw.connected
+        ? `${hw.secondsAgo}s ago (${formatTimestamp(hw.lastSeen)})`
+        : `Disconnected (${hw.secondsAgo ? hw.secondsAgo + 's ago' : 'No recent signal'})`;
     } else {
-      hwTime.textContent = 'Never (Awaiting first POST payload)';
+      hwTime.textContent = 'Never (Awaiting first payload from NodeMCU ESP)';
     }
   }
   if (hwIpContainer && hw.serverIps && hw.serverIps.length > 0) {

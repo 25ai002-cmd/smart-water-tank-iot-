@@ -269,9 +269,21 @@ a { color: inherit; text-decoration: none; }
   animation: pulse-dot 2s infinite;
 }
 .status-dot.demo { background: var(--warning); }
+.status-dot.node-disconnected {
+  background: var(--danger);
+  box-shadow: 0 0 0 2px rgba(220,38,38,0.25);
+  animation: pulse-dot-danger 2s infinite;
+}
+.status-dot.server-offline {
+  background: var(--text-muted);
+}
 @keyframes pulse-dot {
   0%,100% { box-shadow: 0 0 0 2px rgba(22,163,74,0.2); }
   50%      { box-shadow: 0 0 0 5px rgba(22,163,74,0.08); }
+}
+@keyframes pulse-dot-danger {
+  0%,100% { box-shadow: 0 0 0 2px rgba(220,38,38,0.25); }
+  50%      { box-shadow: 0 0 0 5px rgba(220,38,38,0.08); }
 }
 
 /* =====================================================

@@ -24,14 +24,31 @@ function syncControlsUI(data) {
     const isSourceEmpty = data.motor.sourceEmpty;
     toggleBtn.textContent = isOn ? 'Turn OFF Pump' : (isSourceEmpty ? 'Reset Alert & Turn ON' : 'Turn ON Pump');
     toggleBtn.className = isOn ? 'btn-primary btn-danger' : (isSourceEmpty ? 'btn-primary' : 'btn-primary');
+    const isEspConnected = (data.hardware && data.hardware.connected) || (state.hardware && state.hardware.connected);
     if (isSourceEmpty) {
       controlLabel.textContent = `🚨 Pump locked: Resource is empty! (Refill resource & turn ON to test)`;
       controlLabel.style.color = '#ef4444';
+    } else if (!isEspConnected && state.apiMode) {
+      controlLabel.textContent = isOn ? `Pump is running (⚠️ Node ESP Not Connected)` : `Pump is idle (⚠️ Node ESP Not Connected)`;
+      controlLabel.style.color = '#d97706';
     } else {
       controlLabel.style.color = '';
       controlLabel.textContent = isOn
         ? `Pump is running (${data.motor.mode === 'manual' ? 'Manual override' : 'Auto mode'})`
         : `Pump is idle`;
+    }
+
+    const modeDot = document.getElementById('mode-dot');
+    const modeValue = document.getElementById('mode-value');
+    if (modeValue) {
+      if (!isEspConnected && state.apiMode) {
+        modeValue.innerHTML = `${data.motor.mode === 'manual' ? 'Manual' : 'Auto'} <span style="color:#ef4444; font-size:0.75rem; font-weight:700;">(🔴 Node ESP Not Connected)</span>`;
+      } else {
+        modeValue.textContent = data.motor.mode === 'manual' ? 'Manual Override' : 'Auto';
+      }
+    }
+    if (modeDot) {
+      modeDot.style.background = isEspConnected ? '#10b981' : '#ef4444';
     }
   }
 
