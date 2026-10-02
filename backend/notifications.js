@@ -94,14 +94,17 @@ async function sendToAll(subscriptions, payload) {
 
 const https = require('https');
 
+const DEFAULT_PUSHOVER_API_TOKEN = 'amec2ekb4b2x69g9nidq98qfszr5r6';
+const DEFAULT_PUSHOVER_USER_KEY  = 'ukbbgtkotfge6biu7168zw8oiiwds9';
+
 /**
  * Send native push notification via Pushover API to iOS & Android devices.
  * Supports custom loud siren sounds and high-priority lockscreen popups.
  * @param {object} opts — { title, message, sound, priority, token, user }
  */
 async function sendPushover({ title, message, sound, priority, token, user }) {
-  const apiToken = token || process.env.PUSHOVER_API_TOKEN;
-  const userKey  = user  || process.env.PUSHOVER_USER_KEY;
+  const apiToken = token || process.env.PUSHOVER_API_TOKEN || DEFAULT_PUSHOVER_API_TOKEN;
+  const userKey  = user  || process.env.PUSHOVER_USER_KEY  || DEFAULT_PUSHOVER_USER_KEY;
 
   if (!apiToken || !userKey) {
     return false; // Pushover not configured

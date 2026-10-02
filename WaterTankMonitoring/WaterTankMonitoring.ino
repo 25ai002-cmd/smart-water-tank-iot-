@@ -53,6 +53,10 @@ void registerWiFiNetworks() {
 // Server URL (Render Cloud URL)
 const String SERVER_URL = "https://smart-water-tank-iot.onrender.com/api/sensor";
 
+// ── PUSHOVER NATIVE NOTIFICATIONS CONFIGURATION ─────────────
+const char* PUSHOVER_API_TOKEN = "amec2ekb4b2x69g9nidq98qfszr5r6";
+const char* PUSHOVER_USER_KEY  = "ukbbgtkotfge6biu7168zw8oiiwds9";
+
 /* ===========================================================
    STEP 2 — HARDWARE CONFIGURATION
    =========================================================== */
@@ -398,5 +402,37 @@ void blinkLED(int count, int delayMs) {
     delay(delayMs);
     digitalWrite(LED_PIN, HIGH); // LED OFF
     delay(delayMs);
+  }
+}
+
+/* ===========================================================
+   FUNCTION: sendPushoverAlert
+   Sends native lockscreen push alerts via Pushover HTTPS API.
+   =========================================================== */
+
+void sendPushoverAlert(String title, String message, String sound, int priority) {
+  if (wifiMulti.run() == WL_CONNECTED) {
+    WiFiClientSecure pushoverClient;
+    pushoverClient.setInsecure(); // Skip SSL certificate check for Pushover
+
+    HTTPClient http;
+    if (http.begin(pushoverClient, "https://api.pushover.net/1/messages.json")) {
+      http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+      String postData = "token=" + String(PUSHOVER_API_TOKEN) +
+                        "&user=" + String(PUSHOVER_USER_KEY) +
+                        "&title=" + title +
+                        "&message=" + message +
+                        "&sound=" + sound +
+                        "&priority=" + String(priority);
+
+      int httpCode = http.POST(postData);
+      if (httpCode == 200) {
+        Serial.printf("[PUSHOVER] 📱 Native push sent successfully! (Sound: %s)\n", sound.c_str());
+      } else {
+        Serial.printf("[PUSHOVER] ⚠️ Failed, HTTP Code: %d\n", httpCode);
+      }
+      http.end();
+    }
   }
 }
