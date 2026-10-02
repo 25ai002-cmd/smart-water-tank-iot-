@@ -331,6 +331,16 @@ function evaluateNotifications(db, prevPct, currentPct, prevMotor, currentMotor,
       generated.push(n);
       broadcastNotification(n);
       console.log(`[Notif] ${opts.priority.toUpperCase()}: ${opts.title}`);
+
+      // Dispatch native Pushover lockscreen push notification with custom sounds
+      const sound = opts.priority === 'critical' ? 'siren' : (opts.priority === 'warning' ? 'falling' : 'pushover');
+      const priority = opts.priority === 'critical' ? 1 : 0;
+      push.sendPushover({
+        title: opts.title,
+        message: opts.message,
+        sound: sound,
+        priority: priority,
+      }).catch(() => {});
     }
   }
 

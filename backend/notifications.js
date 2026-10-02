@@ -92,8 +92,64 @@ async function sendToAll(subscriptions, payload) {
   return valid;
 }
 
+const https = require('https');
+
+/**
+ * Send native push notification via Pushover API to iOS & Android devices.
+ * Supports custom loud siren sounds and high-priority lockscreen popups.
+ * @param {object} opts — { title, message, sound, priority, token, user }
+ */
+async function sendPushover({ title, message, sound, priority, token, user }) {
+  const apiToken = token || process.env.PUSHOVER_API_TOKEN;
+  const userKey  = user  || process.env.PUSHOVER_USER_KEY;
+
+  if (!apiToken || !userKey) {
+    return false; // Pushover not configured
+  }
+
+  const postData = new URLSearchParams({
+    token: apiToken,
+    user: userKey,
+    title: title || '💧 AquaMonitor Alert',
+    message: message || 'Water tank alert triggered.',
+    sound: sound || 'siren', // Options: siren, falling, spacealarm, pushover, persistent
+    priority: priority !== undefined ? String(priority) : '1', // 1 = high priority bypasses silent mode
+  }).toString();
+
+  return new Promise((resolve) => {
+    const req = https.request('https://api.pushover.net/1/messages.json', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(postData),
+      }
+    }, (res) => {
+      let data = '';
+      res.on('data', d => data += d);
+      res.on('end', () => {
+        if (res.statusCode === 200) {
+          console.log(`[Pushover] 📱 Native push sent to phone: "${title}" (${sound || 'siren'})`);
+          resolve(true);
+        } else {
+          console.warn(`[Pushover] ⚠️ API response status ${res.statusCode}:`, data);
+          resolve(false);
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      console.warn('[Pushover] ⚠️ Request error:', err.message);
+      resolve(false);
+    });
+
+    req.write(postData);
+    req.end();
+  });
+}
+
 module.exports = {
   vapidPublicKey: vapidKeys.publicKey,
   sendNotification,
   sendToAll,
+  sendPushover,
 };
