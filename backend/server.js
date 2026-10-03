@@ -443,7 +443,10 @@ function evaluateNotifications(db, prevPct, currentPct, prevMotor, currentMotor,
         // Water IS flowing from resource into tank — reset tracking window
         ns.dryRunTracker.startTime  = now;
         ns.dryRunTracker.startLevel = currentPct;
-        if (db.motor.sourceEmpty) {
+        if (db.motor.sourceEmpty || db.motor.probing) {
+          db.motor.sourceEmpty = false;
+          db.motor.probing = false;
+          db.motor.probeStartedAt = null;
           emit({
             type:     'resource_refilled',
             title:    '✅ Resource Refilled — Pumping Water',
@@ -452,6 +455,8 @@ function evaluateNotifications(db, prevPct, currentPct, prevMotor, currentMotor,
           });
         }
         db.motor.sourceEmpty = false;
+        db.motor.probing = false;
+        db.motor.probeStartedAt = null;
         resolveNotification(db, 'source_empty');
         resolveNotification(db, 'pump_failure');
         resolveNotification(db, 'dry_run');
@@ -1153,6 +1158,89 @@ setInterval(() => {
     }
   }
 }, 3000);
+
+
+/* ==================================================
+   30-SECOND DRY-RUN AUTO-PROBE & RECOVERY TIMER (every 1 second)
+   ================================================== */
+const DRY_RUN_COOLDOWN_MS = 30000; // 30 seconds cooldown before auto-testing refilled water
+const PROBE_WINDOW_MS     = 15000; // 15 seconds test window to detect water rise
+
+setInterval(() => {
+  const db = readDB();
+  if (!db.motor || !db.motor.sourceEmpty) return;
+
+  const now = Date.now();
+  const lastEmpty = db.motor.lastSourceEmptyTime ? new Date(db.motor.lastSourceEmptyTime).getTime() : now;
+  const elapsed = now - lastEmpty;
+  const stopThresh = db.settings && db.settings.motorOffThreshold ? db.settings.motorOffThreshold : 90;
+  const currentPct = db.sensor ? db.sensor.waterPercentage : 0;
+
+  // If tank is already full, clear sourceEmpty
+  if (currentPct >= stopThresh) {
+    db.motor.sourceEmpty = false;
+    db.motor.probing = false;
+    db.motor.status = false;
+    writeDB(db);
+    return;
+  }
+
+  if (!db.motor.status && elapsed >= DRY_RUN_COOLDOWN_MS) {
+    // ── 30s COOLDOWN ELAPSED: Auto-start pump to probe resource ──
+    console.log('[AUTO-PROBE] 🔄 30 seconds elapsed since dry-run! Starting pump to check if resource has refilled...');
+    db.motor.status = true;
+    db.motor.mode = 'auto';
+    db.motor.probing = true;
+    db.motor.probeStartedAt = new Date().toISOString();
+    db.motor.onSince = new Date().toISOString();
+    if (!db.notificationState) db.notificationState = {};
+    db.notificationState.dryRunTracker = { startLevel: currentPct, startTime: now, peakLevel: currentPct };
+    writeDB(db);
+
+    const localIps = getLocalIPs();
+    io.emit('sensor:data', {
+      sensor: db.sensor,
+      motor:  db.motor,
+      buzzer: db.buzzer,
+      alert:  { level: 'low', message: '🔄 Testing resource — pump started for 15s to check if refilled...' },
+      hardware: {
+        connected: lastSensorTimestamp ? ((Date.now() - new Date(lastSensorTimestamp).getTime()) / 1000 <= 15) : false,
+        lastSeen: lastSensorTimestamp,
+        secondsAgo: 0,
+        serverIps: localIps,
+      }
+    });
+  } else if (db.motor.status && db.motor.probing) {
+    // ── PROBING ACTIVE: check if probe window has timed out without water rise ──
+    const probeStart = db.motor.probeStartedAt ? new Date(db.motor.probeStartedAt).getTime() : now;
+    const probeElapsed = now - probeStart;
+
+    if (probeElapsed >= PROBE_WINDOW_MS) {
+      console.log('[AUTO-PROBE] ⛔ Resource still empty after 15s test! Stopping pump. Next auto-check in 30s.');
+      db.motor.status = false;
+      db.motor.probing = false;
+      db.motor.probeStartedAt = null;
+      db.motor.lastSourceEmptyTime = new Date().toISOString();
+      db.motor.onSince = null;
+      if (db.notificationState) db.notificationState.dryRunTracker = null;
+      writeDB(db);
+
+      const localIps = getLocalIPs();
+      io.emit('sensor:data', {
+        sensor: db.sensor,
+        motor:  db.motor,
+        buzzer: db.buzzer,
+        alert:  { level: 'low', message: '🚨 Resource Still Empty — Motor stopped. Next auto-check in 30s.' },
+        hardware: {
+          connected: lastSensorTimestamp ? ((Date.now() - new Date(lastSensorTimestamp).getTime()) / 1000 <= 15) : false,
+          lastSeen: lastSensorTimestamp,
+          secondsAgo: 0,
+          serverIps: localIps,
+        }
+      });
+    }
+  }
+}, 1000);
 
 
 /* ==================================================
