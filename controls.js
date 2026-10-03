@@ -91,6 +91,7 @@ async function toggleMotor() {
       state.motorOn = data.status;
       state.motorManual = (data.mode === 'manual');
       syncControlsUI({ motor: data });
+      showFeedback('settings-feedback', data.status ? '⚡ Pump started successfully.' : '⚡ Pump stopped.', 'success');
     } catch {
       showFeedback('settings-feedback', '❌ Failed to toggle motor on server.', 'error');
     }
@@ -108,6 +109,25 @@ async function toggleMotor() {
       // Trigger a standard level check update
       loadDemoDefaults();
     }, 30000);
+  }
+}
+
+/**
+ * Directly reset resource empty lock when user refills the resource tank
+ */
+async function resetResourceLock() {
+  if (state.apiMode) {
+    try {
+      const response = await fetch(`${CONFIG.API_URL}/api/motor/reset-source`, { method: 'POST' });
+      const data = await response.json();
+      if (data.success) {
+        state.motorOn = data.motor.status;
+        syncControlsUI({ motor: data.motor });
+        showFeedback('settings-feedback', '✅ Resource lock cleared! Pump resumed.', 'success');
+      }
+    } catch {
+      showFeedback('settings-feedback', '❌ Server unreachable.', 'error');
+    }
   }
 }
 

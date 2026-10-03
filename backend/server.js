@@ -862,6 +862,52 @@ app.post('/api/motor', (req, res) => {
 });
 
 
+// ── POST /api/motor/reset-source ────────────────────────
+// Clears the Resource Empty lockout immediately when user refills the resource tank
+app.post(['/api/motor/reset-source', '/api/reset-source'], (req, res) => {
+  const db = readDB();
+  db.motor.sourceEmpty = false;
+  db.motor.lastSourceEmptyTime = null;
+  db.motor.mode = 'auto';
+
+  resolveNotification(db, 'source_empty');
+  resolveNotification(db, 'dry_run');
+  if (db.notificationState) {
+    db.notificationState.dryRunTracker = null;
+  }
+
+  // If tank is not full, auto-start motor
+  const pct = db.sensor ? db.sensor.waterPercentage : 0;
+  const stopThresh = db.settings && db.settings.motorOffThreshold ? db.settings.motorOffThreshold : 90;
+  if (pct < stopThresh) {
+    db.motor.status = true;
+    db.motor.onSince = new Date().toISOString();
+  }
+
+  db.motor.lastChanged = new Date().toISOString();
+  writeDB(db);
+
+  const localIps = getLocalIPs();
+  io.emit('sensor:data', {
+    sensor: db.sensor,
+    motor:  db.motor,
+    buzzer: db.buzzer,
+    alert:  { level: 'normal', message: 'Resource refilled — pump resumed.' },
+    hardware: {
+      connected: lastSensorTimestamp ? ((Date.now() - new Date(lastSensorTimestamp).getTime()) / 1000 <= 15) : false,
+      lastSeen: lastSensorTimestamp,
+      secondsAgo: 0,
+      serverIps: localIps,
+      publicUrl: publicTunnelUrl,
+      publicIp: publicIp,
+      apiUrl: localIps.map(ip => `http://${ip}:${PORT}/api/sensor`),
+    }
+  });
+
+  console.log('[SOURCE] ✅ User reset resource empty lockout. Pump resumed.');
+  res.json({ success: true, motor: db.motor });
+});
+
 // ── GET /api/buzzer ─────────────────────────────────
 app.get('/api/buzzer', (req, res) => { res.json(readDB().buzzer); });
 
