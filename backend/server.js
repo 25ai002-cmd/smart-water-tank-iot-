@@ -473,13 +473,13 @@ function evaluateNotifications(db, prevPct, currentPct, prevMotor, currentMotor,
         emit({
           type:     'source_empty',
           title:    '🚨 Resource Empty — Motor Stopped',
-          message:  `No water detected in resource! Motor stopped after ${Math.round(secElapsed)}s to prevent dry-run damage. Will auto-retry once refilled.`,
+          message:  `No water detected in resource! Motor stopped after ${Math.round(secElapsed)}s to prevent dry-run damage. Will auto-retry in 30s to check if refilled.`,
           priority: 'critical',
         });
         emit({
           type:     'dry_run',
           title:    '⚠️ Dry Run Protection Activated',
-          message:  'Pump running without water from resource. Motor stopped automatically to protect hardware.',
+          message:  'Pump running without water from resource. Motor stopped automatically. Auto-probing in 30 seconds.',
           priority: 'critical',
         });
 
@@ -590,19 +590,23 @@ app.post('/api/sensor', (req, res) => {
     console.log('[SOURCE] Water level increased — resource empty lockout cleared.');
   }
 
-  // ── SMART AUTO-RETRY ON RESOURCE REFILL ──────────────
-  // If resource was empty and tank is still low, auto-probe every 45s to detect when source is refilled
-  const RETRY_INTERVAL_MS = 45000;
-  const startThreshVal = settings.motorOnThreshold !== undefined ? settings.motorOnThreshold : 20;
-  if (db.motor.sourceEmpty && waterPercentage <= startThreshVal) {
+  // ── SMART AUTO-RETRY ON RESOURCE REFILL (30 SECONDS) ──────────────
+  // If resource was empty and tank is not full, auto-probe every 30s to check if source is refilled
+  const RETRY_INTERVAL_MS = 30000;
+  const stopThresh = settings.motorOffThreshold !== undefined ? settings.motorOffThreshold : 90;
+  let autoProbingNow = false;
+
+  if (db.motor.sourceEmpty && currentWaterPct < stopThresh) {
     const lastEmpty = db.motor.lastSourceEmptyTime ? new Date(db.motor.lastSourceEmptyTime).getTime() : 0;
     if (now - lastEmpty >= RETRY_INTERVAL_MS && !db.motor.status) {
-      console.log('[AUTO-RETRY] 🔄 Probing resource: Testing if source has been refilled with water...');
+      console.log('[AUTO-RETRY] 🔄 30s elapsed: Auto-starting pump to test if water resource has been refilled...');
       db.motor.status              = true;
       db.motor.mode                = 'auto';
       db.motor.onSince             = new Date().toISOString();
       db.motor.lastSourceEmptyTime = new Date().toISOString();
-      if (db.notificationState) db.notificationState.dryRunTracker = null;
+      if (!db.notificationState) db.notificationState = {};
+      db.notificationState.dryRunTracker = { startLevel: currentWaterPct, startTime: now, peakLevel: currentWaterPct };
+      autoProbingNow = true;
     }
   }
 
@@ -610,7 +614,6 @@ app.post('/api/sensor', (req, res) => {
     calculateFromDistance(dist, settings);
 
   // 🚨 HARD SAFETY & FAST AUTO-STOP LOGIC (0.5s instant cutoff on threshold detection):
-  const stopThresh = settings.motorOffThreshold !== undefined ? settings.motorOffThreshold : 90;
   if (dist <= 2.0 || waterPercentage >= stopThresh) {
     motorOn = false;
     db.motor.status = false;
@@ -621,10 +624,14 @@ app.post('/api/sensor', (req, res) => {
   }
 
   // 🚨 RESOURCE EMPTY PROTECTION & MOTOR CONTROL:
-  if (db.motor.sourceEmpty && !db.motor.status) {
+  if (db.motor.sourceEmpty && !db.motor.status && !autoProbingNow) {
     motorOn = false;
     db.motor.status = false;
     db.motor.onSince = null;
+  } else if (db.motor.sourceEmpty && (db.motor.status || autoProbingNow)) {
+    // 30s Auto-probe in progress — keep pump running during probe window
+    motorOn = true;
+    db.motor.status = true;
   } else if (!db.motor.sourceEmpty && motorOn !== null) {
     if (motorOn && !prevMotor) {
       db.motor.onSince = new Date().toISOString();
