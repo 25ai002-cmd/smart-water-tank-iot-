@@ -263,7 +263,9 @@ function addHistory(db, sensorDistance, waterLevel, waterPercentage, motorOn, bu
    SMART NOTIFICATION ENGINE
    ================================================== */
 
-let lastSensorTimestamp = null; // track sensor timeout (15s)
+const SERVER_START_TIME = Date.now();
+const initialDb = readDB();
+let lastSensorTimestamp = (initialDb && initialDb.sensor && initialDb.sensor.timestamp) ? initialDb.sensor.timestamp : null;
 let lastKnownHardwareConnected = null; // track connection transitions (NodeMCU ESP8266)
 let stopConsecutiveHits  = 0;    // debounce counter for motor auto-stop at target threshold
 
@@ -1122,11 +1124,11 @@ setInterval(() => {
   const now = Date.now();
   const lastSeenMs = lastSensorTimestamp ? new Date(lastSensorTimestamp).getTime() : null;
   const secSince = lastSeenMs ? (now - lastSeenMs) / 1000 : Infinity;
-  const isConnected = secSince <= 45;
+  const isConnected = lastSeenMs ? (secSince <= 45) : (now - SERVER_START_TIME < 45000);
 
   const db = readDB();
 
-  if (!isConnected) {
+  if (!isConnected && (now - SERVER_START_TIME >= 45000)) {
     const n = createNotification(db, {
       type:     'node_esp_disconnected',
       title:    '⚠️ Node ESP Not Connected',
