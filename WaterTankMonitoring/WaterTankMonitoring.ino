@@ -98,8 +98,12 @@ void setup() {
   Serial.begin(115200);
   delay(200);
 
+  // Enable hardware watchdog timer to prevent lockups
+  ESP.wdtEnable(8000); // 8-second hardware watchdog
+
   Serial.println("\n\n========================================");
   Serial.println("  💧 AquaMonitor NodeMCU ESP8266 Started ");
+  Serial.println("  🔋 24/7 Continuous USB Power Mode Active ");
   Serial.println("========================================\n");
 
   // Configure pin modes
@@ -114,32 +118,32 @@ void setup() {
   digitalWrite(BUZZER_PIN, LOW);
   digitalWrite(LED_PIN, HIGH); // Off for ESP8266 built-in LED (inverted logic)
 
+  // Configure Wi-Fi stack for 24/7 resilience (auto-reconnect without flash wear)
+  WiFi.persistent(false);
+  WiFi.setAutoReconnect(true);
+  WiFi.setAutoConnect(true);
+
+  // Configure SSL buffer limits to conserve ESP8266 RAM over weeks of continuous uptime
+  secureClient.setBufferSizes(512, 512);
+
   // Configure Multi-WiFi and Connect
   registerWiFiNetworks();
   connectWiFi();
 }
 
 /* ===========================================================
-   LOOP — Runs continuously
+   LOOP — Runs continuously 24/7 until physical power cut
    =========================================================== */
 
 void loop() {
+  ESP.wdtFeed(); // Feed watchdog timer on every single iteration
   unsigned long now = millis();
 
-  // Run at specified send interval
+  // Run at specified send interval (every 3 seconds)
   if (now - lastSendTime >= SEND_INTERVAL) {
     lastSendTime = now;
 
-    // Check Multi-WiFi connection (auto-reconnects to strongest available AP)
-    if (wifiMulti.run() != WL_CONNECTED) {
-      Serial.println("[WARN] Wi-Fi lost! Auto-reconnecting to available network...");
-      digitalWrite(LED_PIN, !digitalRead(LED_PIN)); // Flash LED
-      return;
-    } else {
-      digitalWrite(LED_PIN, LOW); // Solid ON when connected
-    }
-
-    // 1. Measure distance using ultrasonic sensor
+    // 1. ALWAYS measure distance using ultrasonic sensor (runs 100% locally)
     float distance = measureDistance();
 
     // 🚨 EMERGENCY HARDWARE FAILSAFE: If water gets within 2.0cm of sensor eyes, CUT OFF RELAY IMMEDIATELY!
@@ -148,25 +152,41 @@ void loop() {
       setRelayState(false);
     }
 
-    if (distance < 0) {
+    if (distance > 0) {
+      // 2. Calculate water height & percentage
+      float waterLevel = constrain(SENSOR_TOTAL_HEIGHT - distance, 0.0f, TANK_HEIGHT);
+      float waterPct   = constrain((waterLevel / TANK_HEIGHT) * 100.0f, 0.0f, 100.0f);
+
+      // 3. Print sensor telemetry to Serial
+      printReadings(distance, waterLevel, waterPct);
+
+      // 4. Check Wi-Fi state & sync
+      if (wifiMulti.run() == WL_CONNECTED) {
+        digitalWrite(LED_PIN, LOW); // Solid ON when connected
+        sendToServer(distance);
+      } else {
+        // Wi-Fi offline — auto-reconnecting in background while maintaining local tank protection
+        Serial.println("[OFFLINE MODE] Wi-Fi lost. Running autonomous local tank protection...");
+        digitalWrite(LED_PIN, !digitalRead(LED_PIN)); // Flash LED
+
+        // Autonomous local control while Wi-Fi reconnects:
+        if (waterPct >= 90.0f || distance <= 3.0f) {
+          setRelayState(false); // Auto stop when full
+          digitalWrite(BUZZER_PIN, LOW);
+        } else if (waterPct <= 20.0f) {
+          setRelayState(true);  // Auto start when empty
+          digitalWrite(BUZZER_PIN, HIGH);
+        } else {
+          digitalWrite(BUZZER_PIN, LOW);
+        }
+      }
+    } else {
       Serial.println("[ERROR] Sensor measurement failed. Check HC-SR04 wiring (VCC, GND, TRIG, ECHO).");
-      // Blink LED quickly twice to signal sensor error
       blinkLED(2, 100);
-      return;
     }
-
-    // 2. Calculate water height & percentage
-    float waterLevel = constrain(SENSOR_TOTAL_HEIGHT - distance, 0.0f, TANK_HEIGHT);
-    float waterPct   = constrain((waterLevel / TANK_HEIGHT) * 100.0f, 0.0f, 100.0f);
-
-    // 3. Print sensor telemetry to Serial
-    printReadings(distance, waterLevel, waterPct);
-
-    // 4. Send telemetry to software backend API & update actuators
-    sendToServer(distance);
   }
 
-  yield(); // Feed ESP8266 watchdog timer
+  yield(); // Feed ESP8266 background system tasks
 }
 
 /* ===========================================================
