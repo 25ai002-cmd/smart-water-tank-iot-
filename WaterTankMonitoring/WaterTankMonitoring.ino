@@ -50,8 +50,14 @@ void registerWiFiNetworks() {
   // wifiMulti.addAP("College_WiFi",   "College_Password");
 }
 
-// Server URL (Render Cloud URL)
-const String SERVER_URL = "https://smart-water-tank-iot.onrender.com/api/sensor";
+// Server Target URLs (Dual-Sync: Cloud + Local Laptop)
+// 1. Render Cloud Server (Accessible from anywhere via mobile data / internet)
+const String CLOUD_SERVER_URL = "https://smart-water-tank-iot.onrender.com/api/sensor";
+
+// 2. Local PC Server (Runs on your laptop via START SERVER.bat)
+// Note: If you run START SERVER.bat, replace the IP below with your laptop's IPv4 address from START SERVER.bat
+// Example: "http://192.168.1.15:3000/api/sensor". If testing cloud only, you can leave it empty "".
+const String LOCAL_SERVER_URL = "http://192.168.1.15:3000/api/sensor";
 
 // ── PUSHOVER NATIVE NOTIFICATIONS CONFIGURATION ─────────────
 const char* PUSHOVER_API_TOKEN = "amec2ekb4b2x69g9nidq98qfszr5r6";
@@ -303,76 +309,85 @@ float measureDistance() {
 
 /* ===========================================================
    FUNCTION: sendToServer
-   POSTs telemetry JSON to backend and syncs Relay/Buzzer state.
+   POSTs telemetry JSON to both Cloud Render & Local PC Backend.
    =========================================================== */
 
-void sendToServer(float distance) {
+bool postEndpoint(const String& url, const String& body, bool updateActuators) {
+  if (url.length() < 10) return false;
   HTTPClient http;
+  bool isHttps = url.startsWith("https://");
 
-  if (SERVER_URL.startsWith("https://")) {
-    secureClient.setInsecure(); // Allow SSL handshake for cloud services like Render
-    http.begin(secureClient, SERVER_URL);
+  if (isHttps) {
+    secureClient.setInsecure(); // Allow SSL handshake
+    http.begin(secureClient, url);
   } else {
-    http.begin(wifiClient, SERVER_URL);
+    http.begin(wifiClient, url);
   }
 
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(4000); // 4 second connection timeout
-
-  String body = "{\"sensorDistance\":" + String(distance, 1) + "}";
+  http.setTimeout(isHttps ? 3500 : 1500); // 3.5s for cloud HTTPS, 1.5s for local LAN
 
   Serial.print("[HTTP] POST → ");
-  Serial.print(SERVER_URL);
+  Serial.print(url);
   Serial.print(" Data: ");
   Serial.println(body);
 
   int httpCode = http.POST(body);
+  bool success = false;
 
   if (httpCode == 200) {
+    success = true;
     String response = http.getString();
 
-    // Parse JSON payload from Express server
-    StaticJsonDocument<512> doc;
-    DeserializationError error = deserializeJson(doc, response);
+    if (updateActuators) {
+      StaticJsonDocument<512> doc;
+      DeserializationError error = deserializeJson(doc, response);
+      if (!error) {
+        bool motorOn  = doc["motor"]["status"];
+        bool buzzerOn = doc["buzzer"]["status"];
+        const char* alertMsg = doc["alert"]["message"];
 
-    if (!error) {
-      bool motorOn  = doc["motor"]["status"];
-      bool buzzerOn = doc["buzzer"]["status"];
-      const char* alertMsg = doc["alert"]["message"];
+        setRelayState(motorOn);
+        digitalWrite(BUZZER_PIN, buzzerOn ? HIGH : LOW);
 
-      // Update physical actuators
-      setRelayState(motorOn);
-      digitalWrite(BUZZER_PIN, buzzerOn ? HIGH : LOW);
-
-      // Brief flash to indicate successful hardware-software sync
-      digitalWrite(LED_PIN, HIGH);
-      delay(50);
-      digitalWrite(LED_PIN, LOW);
-
-      Serial.print("  [SYNC OK] Motor: ");
-      Serial.print(motorOn  ? "ON [PUMP ACTIVE]" : "OFF [PUMP IDLE]");
-      Serial.print("  |  Buzzer: ");
-      Serial.print(buzzerOn ? "ACTIVE" : "OFF");
-      Serial.print("  |  Server Alert: ");
-      Serial.println(alertMsg);
-
-    } else {
-      Serial.print("[ERROR] JSON parsing failed: ");
-      Serial.println(error.c_str());
+        Serial.print("  [SYNC OK] Motor: ");
+        Serial.print(motorOn  ? "ON [PUMP ACTIVE]" : "OFF [PUMP IDLE]");
+        Serial.print("  |  Buzzer: ");
+        Serial.print(buzzerOn ? "ACTIVE" : "OFF");
+        Serial.print("  |  Alert: ");
+        Serial.println(alertMsg);
+      }
     }
-
   } else if (httpCode < 0) {
-    Serial.print("[ERROR] HTTP request failed. Error code: ");
+    Serial.print("  [HTTP ERROR] Failed with code: ");
     Serial.println(httpCode);
-    Serial.println("  Make sure START SERVER.bat is running on your PC.");
-    Serial.print("  Current target URL: ");
-    Serial.println(SERVER_URL);
   } else {
-    Serial.print("[ERROR] Server responded with HTTP ");
+    Serial.print("  [HTTP ERROR] Server responded: ");
     Serial.println(httpCode);
   }
 
   http.end();
+  return success;
+}
+
+void sendToServer(float distance) {
+  String body = "{\"sensorDistance\":" + String(distance, 1) + "}";
+
+  // 1. Sync to Local PC Server first (if configured and on same Wi-Fi)
+  bool localSynced = false;
+  if (LOCAL_SERVER_URL.length() > 10) {
+    localSynced = postEndpoint(LOCAL_SERVER_URL, body, true);
+  }
+
+  // 2. Sync to Cloud Render Deployment (syncs actuators if local was not reached)
+  bool cloudSynced = postEndpoint(CLOUD_SERVER_URL, body, !localSynced);
+
+  // LED Flash indicator on successful sync
+  if (localSynced || cloudSynced) {
+    digitalWrite(LED_PIN, HIGH);
+    delay(40);
+    digitalWrite(LED_PIN, LOW);
+  }
 }
 
 /* ===========================================================
