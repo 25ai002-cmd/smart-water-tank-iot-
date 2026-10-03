@@ -55,9 +55,7 @@ void registerWiFiNetworks() {
 const String CLOUD_SERVER_URL = "https://smart-water-tank-iot.onrender.com/api/sensor";
 
 // 2. Local PC Server (Runs on your laptop via START SERVER.bat)
-// Note: If you run START SERVER.bat, replace the IP below with your laptop's IPv4 address from START SERVER.bat
-// Example: "http://192.168.1.15:3000/api/sensor". If testing cloud only, you can leave it empty "".
-const String LOCAL_SERVER_URL = "http://192.168.1.15:3000/api/sensor";
+const String LOCAL_SERVER_URL = "http://10.204.4.141:3000/api/sensor";
 
 // ── PUSHOVER NATIVE NOTIFICATIONS CONFIGURATION ─────────────
 const char* PUSHOVER_API_TOKEN = "amec2ekb4b2x69g9nidq98qfszr5r6";
