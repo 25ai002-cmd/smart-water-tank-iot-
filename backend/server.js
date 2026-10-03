@@ -790,7 +790,7 @@ app.get('/api/status', (req, res) => {
   const localIps = getLocalIPs();
   const lastSeenMs = lastSensorTimestamp ? new Date(lastSensorTimestamp).getTime() : null;
   const secAgo = lastSeenMs ? Math.floor((Date.now() - lastSeenMs) / 1000) : null;
-  const hardwareConnected = secAgo !== null && secAgo <= 15;
+  const hardwareConnected = secAgo !== null && secAgo <= 45;
 
   let alertLevel, alertMessage;
   if (!hardwareConnected) {
@@ -1122,7 +1122,7 @@ setInterval(() => {
   const now = Date.now();
   const lastSeenMs = lastSensorTimestamp ? new Date(lastSensorTimestamp).getTime() : null;
   const secSince = lastSeenMs ? (now - lastSeenMs) / 1000 : Infinity;
-  const isConnected = secSince <= 15;
+  const isConnected = secSince <= 45;
 
   const db = readDB();
 

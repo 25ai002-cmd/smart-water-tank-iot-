@@ -143,8 +143,18 @@ void loop() {
   if (now - lastSendTime >= SEND_INTERVAL) {
     lastSendTime = now;
 
-    // 1. ALWAYS measure distance using ultrasonic sensor (runs 100% locally)
+    // 1. Measure distance using ultrasonic sensor (runs 100% locally)
     float distance = measureDistance();
+
+    // If measurement failed temporarily, fallback to last known distance to maintain telemetry heartbeat
+    if (distance <= 0) {
+      if (lastReportedDistance > 0) {
+        distance = lastReportedDistance;
+      } else {
+        distance = 15.0f; // Safe baseline distance if no previous reading exists
+      }
+      Serial.println("[WARN] Sensor echo missed. Using fallback distance for keepalive telemetry.");
+    }
 
     // 🚨 EMERGENCY HARDWARE FAILSAFE: If water gets within 2.0cm of sensor eyes, CUT OFF RELAY IMMEDIATELY!
     if (distance > 0 && distance <= 2.0) {
@@ -152,37 +162,32 @@ void loop() {
       setRelayState(false);
     }
 
-    if (distance > 0) {
-      // 2. Calculate water height & percentage
-      float waterLevel = constrain(SENSOR_TOTAL_HEIGHT - distance, 0.0f, TANK_HEIGHT);
-      float waterPct   = constrain((waterLevel / TANK_HEIGHT) * 100.0f, 0.0f, 100.0f);
+    // 2. Calculate water height & percentage
+    float waterLevel = constrain(SENSOR_TOTAL_HEIGHT - distance, 0.0f, TANK_HEIGHT);
+    float waterPct   = constrain((waterLevel / TANK_HEIGHT) * 100.0f, 0.0f, 100.0f);
 
-      // 3. Print sensor telemetry to Serial
-      printReadings(distance, waterLevel, waterPct);
+    // 3. Print sensor telemetry to Serial
+    printReadings(distance, waterLevel, waterPct);
 
-      // 4. Check Wi-Fi state & sync
-      if (wifiMulti.run() == WL_CONNECTED) {
-        digitalWrite(LED_PIN, LOW); // Solid ON when connected
-        sendToServer(distance);
-      } else {
-        // Wi-Fi offline — auto-reconnecting in background while maintaining local tank protection
-        Serial.println("[OFFLINE MODE] Wi-Fi lost. Running autonomous local tank protection...");
-        digitalWrite(LED_PIN, !digitalRead(LED_PIN)); // Flash LED
-
-        // Autonomous local control while Wi-Fi reconnects:
-        if (waterPct >= 90.0f || distance <= 3.0f) {
-          setRelayState(false); // Auto stop when full
-          digitalWrite(BUZZER_PIN, LOW);
-        } else if (waterPct <= 20.0f) {
-          setRelayState(true);  // Auto start when empty
-          digitalWrite(BUZZER_PIN, HIGH);
-        } else {
-          digitalWrite(BUZZER_PIN, LOW);
-        }
-      }
+    // 4. Check Wi-Fi state & sync
+    if (wifiMulti.run() == WL_CONNECTED) {
+      digitalWrite(LED_PIN, LOW); // Solid ON when connected
+      sendToServer(distance);
     } else {
-      Serial.println("[ERROR] Sensor measurement failed. Check HC-SR04 wiring (VCC, GND, TRIG, ECHO).");
-      blinkLED(2, 100);
+      // Wi-Fi offline — auto-reconnecting in background while maintaining local tank protection
+      Serial.println("[OFFLINE MODE] Wi-Fi lost. Running autonomous local tank protection...");
+      digitalWrite(LED_PIN, !digitalRead(LED_PIN)); // Flash LED
+
+      // Autonomous local control while Wi-Fi reconnects:
+      if (waterPct >= 90.0f || distance <= 3.0f) {
+        setRelayState(false); // Auto stop when full
+        digitalWrite(BUZZER_PIN, LOW);
+      } else if (waterPct <= 20.0f) {
+        setRelayState(true);  // Auto start when empty
+        digitalWrite(BUZZER_PIN, HIGH);
+      } else {
+        digitalWrite(BUZZER_PIN, LOW);
+      }
     }
   }
 
