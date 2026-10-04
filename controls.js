@@ -24,7 +24,12 @@ function syncControlsUI(data) {
     const isSourceEmpty = data.motor.sourceEmpty;
     toggleBtn.textContent = isOn ? 'Turn OFF Pump' : (isSourceEmpty ? 'Reset Alert & Turn ON' : 'Turn ON Pump');
     toggleBtn.className = isOn ? 'btn-primary btn-danger' : (isSourceEmpty ? 'btn-primary' : 'btn-primary');
-    const isEspConnected = (data.hardware && data.hardware.connected) || (state.hardware && state.hardware.connected);
+    const isEspConnected = (data.hardware && typeof data.hardware.connected === 'boolean')
+      ? data.hardware.connected
+      : ((state.hardware && typeof state.hardware.connected === 'boolean')
+          ? state.hardware.connected
+          : true);
+
     if (isSourceEmpty) {
       controlLabel.textContent = `🚨 Pump locked: Resource is empty! (Refill resource & turn ON to test)`;
       controlLabel.style.color = '#ef4444';

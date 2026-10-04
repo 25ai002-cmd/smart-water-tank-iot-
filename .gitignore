@@ -11,3 +11,7 @@ yarn-error.log*
 # OS specific files
 .DS_Store
 Thumbs.db
+
+# Temporary slide preview files
+slide1_*.png
+exported_slides/

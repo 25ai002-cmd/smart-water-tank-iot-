@@ -32,6 +32,13 @@ const PORT   = process.env.PORT || 3000;
 let publicTunnelUrl = null;
 let publicIp = null;
 
+process.on('uncaughtException', (err) => {
+  console.warn('[SERVER SAFEGUARD] Uncaught error recovered:', err.message);
+});
+process.on('unhandledRejection', (reason) => {
+  console.warn('[SERVER SAFEGUARD] Unhandled promise rejection recovered:', reason);
+});
+
 /**
  * Fetch the public IP address for remote access diagnostics.
  */
@@ -56,7 +63,8 @@ function fetchPublicIp() {
 async function initPublicTunnel() {
   try {
     await fetchPublicIp();
-    const tunnel = await localtunnel({ port: PORT });
+    const tunnel = await localtunnel({ port: PORT }).catch(() => null);
+    if (!tunnel) return;
     publicTunnelUrl = tunnel.url;
 
     console.log('\n🌐 ════════════════════════════════════════════════════════════');
@@ -68,17 +76,14 @@ async function initPublicTunnel() {
     console.log('════════════════════════════════════════════════════════════════\n');
 
     tunnel.on('close', () => {
-      console.log('⚠️ [REMOTE ACCESS] Public tunnel closed. Reconnecting in 10s...');
       publicTunnelUrl = null;
-      setTimeout(initPublicTunnel, 10000);
     });
 
     tunnel.on('error', (err) => {
-      console.error('⚠️ [REMOTE ACCESS] Tunnel error:', err.message);
+      console.warn('⚠️ [REMOTE ACCESS] Tunnel notice:', err ? err.message : 'transient');
     });
   } catch (err) {
-    console.warn('⚠️ [REMOTE ACCESS] Could not start public tunnel:', err.message);
-    setTimeout(initPublicTunnel, 15000);
+    console.warn('⚠️ [REMOTE ACCESS] Tunnel unavailable (Render deployment active).');
   }
 }
 
@@ -265,7 +270,7 @@ function addHistory(db, sensorDistance, waterLevel, waterPercentage, motorOn, bu
 
 const SERVER_START_TIME = Date.now();
 const initialDb = readDB();
-let lastSensorTimestamp = (initialDb && initialDb.sensor && initialDb.sensor.timestamp) ? initialDb.sensor.timestamp : null;
+let lastSensorTimestamp = null; // Reset to null on server boot — await live sensor telemetry
 let lastKnownHardwareConnected = null; // track connection transitions (NodeMCU ESP8266)
 let stopConsecutiveHits  = 0;    // debounce counter for motor auto-stop at target threshold
 
@@ -792,12 +797,12 @@ app.get('/api/status', (req, res) => {
   const localIps = getLocalIPs();
   const lastSeenMs = lastSensorTimestamp ? new Date(lastSensorTimestamp).getTime() : null;
   const secAgo = lastSeenMs ? Math.floor((Date.now() - lastSeenMs) / 1000) : null;
-  const hardwareConnected = secAgo !== null && secAgo <= 45;
+  const hardwareConnected = lastSeenMs ? (secAgo <= 45) : ((Date.now() - SERVER_START_TIME) < 60000);
 
   let alertLevel, alertMessage;
   if (!hardwareConnected) {
     alertLevel   = 'critical';
-    alertMessage = '⚠️ Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.';
+    alertMessage = 'Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.';
   } else if (db.motor.sourceEmpty || (db.notificationState.source_empty && db.notificationState.source_empty.active)) {
     alertLevel   = 'low';
     alertMessage = '🚨 Resource Empty — Motor stopped to prevent dry-run damage. Refill resource tank.';
@@ -1155,7 +1160,7 @@ setInterval(() => {
       });
       io.emit('alert:update', {
         level: 'critical',
-        message: '⚠️ Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.',
+        message: 'Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.',
       });
     }
   }
@@ -1166,7 +1171,7 @@ setInterval(() => {
    30-SECOND DRY-RUN AUTO-PROBE & RECOVERY TIMER (every 1 second)
    ================================================== */
 const DRY_RUN_COOLDOWN_MS = 30000; // 30 seconds cooldown before auto-testing refilled water
-const PROBE_WINDOW_MS     = 15000; // 15 seconds test window to detect water rise
+const PROBE_WINDOW_MS     = 12000; // 12 seconds test window to detect water rise
 
 setInterval(() => {
   const db = readDB();
@@ -1204,7 +1209,7 @@ setInterval(() => {
       sensor: db.sensor,
       motor:  db.motor,
       buzzer: db.buzzer,
-      alert:  { level: 'low', message: '🔄 Testing resource — pump started for 15s to check if refilled...' },
+      alert:  { level: 'low', message: '🔄 Testing resource — pump started for 12s to check if refilled...' },
       hardware: {
         connected: lastSensorTimestamp ? ((Date.now() - new Date(lastSensorTimestamp).getTime()) / 1000 <= 15) : false,
         lastSeen: lastSensorTimestamp,
@@ -1218,7 +1223,7 @@ setInterval(() => {
     const probeElapsed = now - probeStart;
 
     if (probeElapsed >= PROBE_WINDOW_MS) {
-      console.log('[AUTO-PROBE] ⛔ Resource still empty after 15s test! Stopping pump. Next auto-check in 30s.');
+      console.log('[AUTO-PROBE] ⛔ Resource still empty after 12s test! Stopping pump. Next auto-check in 30s.');
       db.motor.status = false;
       db.motor.probing = false;
       db.motor.probeStartedAt = null;
@@ -1232,7 +1237,7 @@ setInterval(() => {
         sensor: db.sensor,
         motor:  db.motor,
         buzzer: db.buzzer,
-        alert:  { level: 'low', message: '🚨 Resource Still Empty — Motor stopped. Next auto-check in 30s.' },
+        alert:  { level: 'low', message: '🚨 Resource Still Empty — Motor stopped after 12s dry test. Next auto-check in 30s.' },
         hardware: {
           connected: lastSensorTimestamp ? ((Date.now() - new Date(lastSensorTimestamp).getTime()) / 1000 <= 15) : false,
           lastSeen: lastSensorTimestamp,

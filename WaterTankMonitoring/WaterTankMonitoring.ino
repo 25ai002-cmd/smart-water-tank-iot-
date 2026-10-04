@@ -94,6 +94,14 @@ unsigned long     lastSendTime = 0;
 WiFiClient        wifiClient;
 WiFiClientSecure  secureClient;
 
+// Offline autonomous dry-run & 30s auto-retest tracker
+bool          offlineMotorStatus = false;
+bool          offlineSourceEmpty = false;
+unsigned long offlineMotorStartTime = 0;
+unsigned long offlineLastEmptyTime = 0;
+float         offlineStartWaterPct = -1.0;
+
+
 /* ===========================================================
    SETUP — Runs once on power up / reset
    =========================================================== */
@@ -182,13 +190,69 @@ void loop() {
       Serial.println("[OFFLINE MODE] Wi-Fi lost. Running autonomous local tank protection...");
       digitalWrite(LED_PIN, !digitalRead(LED_PIN)); // Flash LED
 
-      // Autonomous local control while Wi-Fi reconnects:
+      // Autonomous local control with 12s dry-run & 30s auto-retest protection while offline:
       if (waterPct >= 90.0f || distance <= 3.0f) {
         setRelayState(false); // Auto stop when full
         digitalWrite(BUZZER_PIN, LOW);
-      } else if (waterPct <= 20.0f) {
-        setRelayState(true);  // Auto start when empty
-        digitalWrite(BUZZER_PIN, HIGH);
+        offlineMotorStatus = false;
+        offlineSourceEmpty = false;
+      } else if (waterPct <= 20.0f || offlineMotorStatus) {
+        // Check 30s cooldown if resource was detected empty
+        if (offlineSourceEmpty) {
+          unsigned long offlineElapsed = now - offlineLastEmptyTime;
+          if (offlineElapsed < 30000 && !offlineMotorStatus) {
+            // Still in 30s cooldown: keep motor OFF
+            setRelayState(false);
+            digitalWrite(BUZZER_PIN, LOW);
+            Serial.println("[OFFLINE DRY RUN] Resource empty! Motor in 30s cooldown before retest.");
+          } else {
+            // 30s elapsed or probing: start 12s test
+            if (!offlineMotorStatus) {
+              offlineMotorStatus = true;
+              offlineMotorStartTime = now;
+              offlineStartWaterPct = waterPct;
+              Serial.println("[OFFLINE RETEST] 30s elapsed! Starting motor for 12s retest...");
+            }
+            setRelayState(true);
+            digitalWrite(BUZZER_PIN, HIGH);
+
+            // Check if water level increased during test
+            if (waterPct >= offlineStartWaterPct + 0.3f) {
+              offlineSourceEmpty = false; // Resource refilled!
+              Serial.println("[OFFLINE REFILL] Water level increased! Resource refilled.");
+            } else if (now - offlineMotorStartTime >= 12000) {
+              // 12s dry test passed with no rise: stop motor and wait 30s again
+              setRelayState(false);
+              digitalWrite(BUZZER_PIN, LOW);
+              offlineMotorStatus = false;
+              offlineSourceEmpty = true;
+              offlineLastEmptyTime = now;
+              Serial.println("[OFFLINE DRY RUN] No water rise after 12s! Motor stopped. Retesting in 30s.");
+            }
+          }
+        } else {
+          // Normal motor start when empty
+          if (!offlineMotorStatus) {
+            offlineMotorStatus = true;
+            offlineMotorStartTime = now;
+            offlineStartWaterPct = waterPct;
+          }
+          setRelayState(true);
+          digitalWrite(BUZZER_PIN, HIGH);
+
+          if (waterPct >= offlineStartWaterPct + 0.3f) {
+            offlineMotorStartTime = now;
+            offlineStartWaterPct = waterPct;
+          } else if (now - offlineMotorStartTime >= 12000) {
+            // 12s dry run detected!
+            setRelayState(false);
+            digitalWrite(BUZZER_PIN, LOW);
+            offlineMotorStatus = false;
+            offlineSourceEmpty = true;
+            offlineLastEmptyTime = now;
+            Serial.println("[OFFLINE DRY RUN] 12s with no water rise! Motor stopped. Retesting in 30s.");
+          }
+        }
       } else {
         digitalWrite(BUZZER_PIN, LOW);
       }

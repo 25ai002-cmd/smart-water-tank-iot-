@@ -154,7 +154,11 @@ function applyDashboardData(data) {
   setTextContent('d-last-update',  data.sensor.timestamp ? formatTimestamp(data.sensor.timestamp) : getCurrentTime());
 
   // Node ESP Connection status in details table
-  const isEspConnected = data.hardware ? data.hardware.connected : (state.hardware ? state.hardware.connected : false);
+  const isEspConnected = (data.hardware && typeof data.hardware.connected === 'boolean')
+    ? data.hardware.connected
+    : ((state.hardware && typeof state.hardware.connected === 'boolean')
+        ? state.hardware.connected
+        : true);
   const espStatusEl = document.getElementById('d-esp-status');
   if (espStatusEl) {
     if (isEspConnected) {
@@ -224,9 +228,10 @@ function applyDashboardData(data) {
     if (buzzerStatusText) buzzerStatusText.textContent = isOn ? 'ACTIVE' : 'OFF';
   }
 
-  // 5. Alert banner — prioritize Node ESP disconnected message
+  // 5. Alert banner — check hardware connection
+  const isEspConnected = data.hardware ? data.hardware.connected : true;
   if (!isEspConnected && state.apiMode) {
-    setAlertBanner('critical', '⚠️ Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.');
+    setAlertBanner('critical', 'Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.');
   } else {
     const alertLevel   = data.alert ? data.alert.level : getLocalAlertLevel(pct);
     const alertMessage = data.alert ? data.alert.message : getLocalAlertMsg(pct);
@@ -267,10 +272,13 @@ function setAlertBanner(level, message) {
 
   banner.className = 'alert-banner';
 
+  // Strip any prepended warning/alert emojis from message string to guarantee single icon rendering
+  const cleanMessage = (message || '').replace(/^[\s⚠️🚨🔔ℹ️✅\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{FE0F}]+/u, '').trim();
+
   if (level === 'critical' || level === 'empty' || message.includes('Resource Empty') || message.includes('not connected') || message.includes('Not Connected') || message.includes('Source Empty')) {
     banner.classList.add('alert-low');
     if (iconWrap) iconWrap.innerHTML = `<span style="font-size:1.1rem; line-height:1;">⚠️</span>`;
-    if (text) text.innerHTML = `<span style="color:#ef4444; font-weight:700;">${message}</span>`;
+    if (text) text.innerHTML = `<span style="color:#ef4444; font-weight:700;">${cleanMessage}</span>`;
     return;
   }
 
@@ -289,7 +297,7 @@ function setAlertBanner(level, message) {
   }
 
   if (iconWrap) iconWrap.innerHTML = icons[level] || icons.normal;
-  if (text) text.textContent = message;
+  if (text) text.textContent = cleanMessage;
 }
 
 function setTextContent(id, value) {

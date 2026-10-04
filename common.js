@@ -140,7 +140,7 @@ function initSocketBell() {
           statusListeners.forEach(listener => listener({
             alert: {
               level: 'critical',
-              message: '⚠️ Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.'
+              message: 'Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.'
             },
             hardware: state.hardware
           }));

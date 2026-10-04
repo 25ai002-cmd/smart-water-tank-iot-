@@ -44,9 +44,19 @@
   },
   "notifications": [
     {
+      "id": 1791010323804,
+      "notificationType": "node_esp_disconnected",
+      "title": "\u26a0\ufe0f Node ESP Not Connected",
+      "message": "NodeMCU ESP8266 is not connected. Awaiting sensor data from hardware.",
+      "priority": "critical",
+      "isRead": false,
+      "createdAt": "2026-10-03T06:52:03.804Z",
+      "resolvedAt": "2026-10-03T06:52:03.804Z"
+    },
+    {
       "id": 1790623432950,
       "notificationType": "sensor_timeout",
-      "title": "⚠️ Sensor Timeout",
+      "title": "\u26a0\ufe0f Sensor Timeout",
       "message": "No sensor data received for more than 30 seconds. Please check the sensor connection.",
       "priority": "critical",
       "isRead": false,
@@ -56,7 +66,7 @@
     {
       "id": 1790623172600,
       "notificationType": "motor_stopped",
-      "title": "ℹ️ Water Pump Stopped",
+      "title": "\u2139\ufe0f Water Pump Stopped",
       "message": "Water pump stopped successfully.",
       "priority": "info",
       "isRead": false,
@@ -66,7 +76,7 @@
     {
       "id": 1790623139324,
       "notificationType": "dry_run",
-      "title": "⚠️ Dry Run Protection Activated",
+      "title": "\u26a0\ufe0f Dry Run Protection Activated",
       "message": "Pump running without water from resource. Motor stopped automatically to protect hardware.",
       "priority": "critical",
       "isRead": false,
@@ -76,7 +86,7 @@
     {
       "id": 1790623139323,
       "notificationType": "source_empty",
-      "title": "🚨 Resource Empty — Motor Stopped",
+      "title": "\ud83d\udea8 Resource Empty \u2014 Motor Stopped",
       "message": "No water detected in resource! Motor stopped after 12s to prevent dry-run damage. Will auto-retry once refilled.",
       "priority": "critical",
       "isRead": false,
@@ -86,7 +96,7 @@
     {
       "id": 1790623127232,
       "notificationType": "motor_started",
-      "title": "ℹ️ Water Pump Started",
+      "title": "\u2139\ufe0f Water Pump Started",
       "message": "Water pump started successfully.",
       "priority": "info",
       "isRead": false,
@@ -96,7 +106,7 @@
     {
       "id": 1790623124790,
       "notificationType": "rapid_water_loss",
-      "title": "⚠️ Rapid Water Loss",
+      "title": "\u26a0\ufe0f Rapid Water Loss",
       "message": "Water level dropped by 19.0% in 5 minutes. Possible leakage detected.",
       "priority": "warning",
       "isRead": false,
@@ -106,7 +116,7 @@
     {
       "id": 1790623004312,
       "notificationType": "sensor_timeout",
-      "title": "⚠️ Sensor Timeout",
+      "title": "\u26a0\ufe0f Sensor Timeout",
       "message": "No sensor data received for more than 30 seconds. Please check the sensor connection.",
       "priority": "critical",
       "isRead": false,
@@ -116,7 +126,7 @@
     {
       "id": 1790622609309,
       "notificationType": "motor_stopped",
-      "title": "ℹ️ Water Pump Stopped",
+      "title": "\u2139\ufe0f Water Pump Stopped",
       "message": "Water pump stopped successfully.",
       "priority": "info",
       "isRead": false,
@@ -126,7 +136,7 @@
     {
       "id": 1790622573155,
       "notificationType": "motor_started",
-      "title": "ℹ️ Water Pump Started",
+      "title": "\u2139\ufe0f Water Pump Started",
       "message": "Water pump started successfully.",
       "priority": "info",
       "isRead": false,
@@ -136,7 +146,7 @@
     {
       "id": 1790622524329,
       "notificationType": "rapid_water_loss",
-      "title": "⚠️ Rapid Water Loss",
+      "title": "\u26a0\ufe0f Rapid Water Loss",
       "message": "Water level dropped by 39.0% in 5 minutes. Possible leakage detected.",
       "priority": "warning",
       "isRead": false,
@@ -146,7 +156,7 @@
     {
       "id": 1790622470961,
       "notificationType": "sensor_timeout",
-      "title": "⚠️ Sensor Timeout",
+      "title": "\u26a0\ufe0f Sensor Timeout",
       "message": "No sensor data received for more than 30 seconds. Please check the sensor connection.",
       "priority": "critical",
       "isRead": false,
@@ -156,7 +166,7 @@
     {
       "id": 1790622064540,
       "notificationType": "motor_stopped",
-      "title": "ℹ️ Water Pump Stopped",
+      "title": "\u2139\ufe0f Water Pump Stopped",
       "message": "Water pump stopped successfully.",
       "priority": "info",
       "isRead": false,
@@ -166,7 +176,7 @@
     {
       "id": 1790622028081,
       "notificationType": "motor_started",
-      "title": "ℹ️ Water Pump Started",
+      "title": "\u2139\ufe0f Water Pump Started",
       "message": "Water pump started successfully.",
       "priority": "info",
       "isRead": false,
@@ -176,7 +186,7 @@
     {
       "id": 1790621851226,
       "notificationType": "rapid_water_loss",
-      "title": "⚠️ Rapid Water Loss",
+      "title": "\u26a0\ufe0f Rapid Water Loss",
       "message": "Water level dropped by 36.0% in 5 minutes. Possible leakage detected.",
       "priority": "warning",
       "isRead": false,
@@ -186,7 +196,7 @@
     {
       "id": 1790621798487,
       "notificationType": "sensor_timeout",
-      "title": "⚠️ Sensor Timeout",
+      "title": "\u26a0\ufe0f Sensor Timeout",
       "message": "No sensor data received for more than 30 seconds. Please check the sensor connection.",
       "priority": "critical",
       "isRead": false,
@@ -223,6 +233,9 @@
       "active": false
     },
     "dry_run": {
+      "active": false
+    },
+    "node_esp_disconnected": {
       "active": false
     }
   }
