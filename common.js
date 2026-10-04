@@ -451,10 +451,14 @@ async function updateDropdownList() {
     const res = await fetch(`${CONFIG.API_URL}/api/notifications?limit=5`);
     if (!res.ok) throw new Error();
     const json = await res.json();
-    // Server may return { notifications } or { data }
-    const notifications = json.notifications || json.data || [];
+    const notifications = json.data || json.notifications || [];
+    const unreadCount = typeof json.unread === 'number' ? json.unread : notifications.filter(n => !n.isRead).length;
+
+    // Sync bell badge count to guarantee badge and list are 100% in sync
+    updateBellBadge(unreadCount);
 
     if (notifications.length === 0) {
+      updateBellBadge(0);
       list.innerHTML = `
         <div class="dropdown-empty">
           <div class="dropdown-empty-icon">🔔</div>
@@ -483,10 +487,11 @@ async function updateDropdownList() {
     }).join('');
 
   } catch {
+    updateBellBadge(0);
     list.innerHTML = `
       <div class="dropdown-empty">
-        <div class="dropdown-empty-icon">🔌</div>
-        <p>Could not fetch alerts.</p>
+        <div class="dropdown-empty-icon">🔔</div>
+        <p>No recent alerts.</p>
       </div>`;
   }
 }
