@@ -397,58 +397,51 @@ function setupNotificationDropdown() {
     dropdown.style.zIndex    = '9000';
   }
 
-  // ── Toggle open/close ──
-  bellBtn.addEventListener('click', (e) => {
-    if (window.location.pathname.includes('notifications.html')) {
-      return; // Navigate normally on the notifications page
-    }
-    e.preventDefault();
-    e.stopPropagation();
-    const isOpen = dropdown.classList.toggle('show');
-    if (isOpen) {
-      repositionDropdown();
+function toggleBellDropdown() {
+  const dropdown = document.getElementById('bell-dropdown') || document.querySelector('.notif-dropdown') || document.querySelector('.bell-dropdown');
+  const btn = document.getElementById('bell-btn') || document.querySelector('.bell-btn');
+  if (!dropdown) return;
+
+  const isOpen = dropdown.classList.contains('show') || dropdown.classList.contains('open');
+
+  if (isOpen) {
+    dropdown.classList.remove('show', 'open');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  } else {
+    dropdown.classList.add('show', 'open');
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+    updateDropdownList();
+  }
+}
+window.toggleBellDropdown = toggleBellDropdown;
+
+function closeBellDropdown() {
+  const dropdown = document.getElementById('bell-dropdown') || document.querySelector('.notif-dropdown') || document.querySelector('.bell-dropdown');
+  const btn = document.getElementById('bell-btn') || document.querySelector('.bell-btn');
+  if (dropdown) dropdown.classList.remove('show', 'open');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+window.closeBellDropdown = closeBellDropdown;
+
+async function markAllReadDash() {
+  try {
+    const res = await fetch(`${CONFIG.API_URL}/api/notifications/read-all`, { method: 'POST' });
+    if (res.ok) {
+      updateBellBadge(0);
       updateDropdownList();
     }
-  });
-
-  // Re-position on scroll or resize
-  window.addEventListener('resize', () => {
-    if (dropdown.classList.contains('show')) repositionDropdown();
-  });
-  window.addEventListener('scroll', () => {
-    if (dropdown.classList.contains('show')) repositionDropdown();
-  }, { passive: true });
-
-  // ── Close when clicking outside ──
-  document.addEventListener('click', (e) => {
-    if (!wrapper.contains(e.target) && !dropdown.contains(e.target)) {
-      dropdown.classList.remove('show');
-    }
-  });
-
-  // ── Mark all read ──
-  const markAllBtn = dropdown.querySelector('#dropdown-mark-all');
-  markAllBtn.addEventListener('click', async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      const res = await fetch(`${CONFIG.API_URL}/api/notifications/read-all`, { method: 'POST' });
-      if (res.ok) {
-        updateBellBadge(0);
-        updateDropdownList();
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  });
+  } catch (err) {
+    console.error(err);
+  }
 }
+window.markAllReadDash = markAllReadDash;
 
 async function updateDropdownList() {
-  const list = document.getElementById('dropdown-list');
+  const list = document.getElementById('dropdown-list') || document.getElementById('notif-dropdown-list');
   if (!list) return;
 
   try {
-    const res = await fetch(`${CONFIG.API_URL}/api/notifications?limit=5`);
+    const res = await fetch(`${CONFIG.API_URL}/api/notifications?limit=6`);
     if (!res.ok) throw new Error();
     const json = await res.json();
     const notifications = json.data || json.notifications || [];
@@ -460,9 +453,9 @@ async function updateDropdownList() {
     if (notifications.length === 0) {
       updateBellBadge(0);
       list.innerHTML = `
-        <div class="dropdown-empty">
-          <div class="dropdown-empty-icon">🔔</div>
-          <p>No recent alerts.</p>
+        <div class="dropdown-empty" style="padding: 1.5rem; text-align: center;">
+          <div class="dropdown-empty-icon" style="font-size: 1.75rem; margin-bottom: 0.5rem;">🔔</div>
+          <p style="color: var(--text-secondary); font-size: 0.85rem;">No recent alerts</p>
         </div>`;
       return;
     }
@@ -489,12 +482,13 @@ async function updateDropdownList() {
   } catch {
     updateBellBadge(0);
     list.innerHTML = `
-      <div class="dropdown-empty">
-        <div class="dropdown-empty-icon">🔔</div>
-        <p>No recent alerts.</p>
+      <div class="dropdown-empty" style="padding: 1.5rem; text-align: center;">
+        <div class="dropdown-empty-icon" style="font-size: 1.75rem; margin-bottom: 0.5rem;">🔔</div>
+        <p style="color: var(--text-secondary); font-size: 0.85rem;">No recent alerts</p>
       </div>`;
   }
 }
+window.updateDropdownList = updateDropdownList;
 
 function formatRelativeTimeCommon(isoStr) {
   const diff = Date.now() - new Date(isoStr).getTime();

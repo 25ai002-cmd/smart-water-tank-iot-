@@ -667,8 +667,12 @@ input[type="range"]::-webkit-slider-thumb {
   flex-direction: column;
   overflow: hidden;
 }
-.bell-dropdown.show {
-  display: flex;
+.bell-dropdown.show, .bell-dropdown.open,
+.notif-dropdown.show, .notif-dropdown.open {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
   animation: dropdown-in 0.18s ease forwards;
 }
 
@@ -775,8 +779,11 @@ input[type="range"]::-webkit-slider-thumb {
   z-index: 9999;
   overflow: hidden;
 }
-.notif-dropdown.open {
-  display: flex;
+.notif-dropdown.open, .notif-dropdown.show {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
   animation: dropdown-in 0.18s ease forwards;
 }
 @keyframes dropdown-in {
