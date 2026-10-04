@@ -15,7 +15,7 @@
   <div class="app-container">
 
     <!-- ===== SIDEBAR (Desktop) ===== -->
-    <nav class="sidebar" aria-label="Primary navigation">
+        <nav class="sidebar" id="sidebar" aria-label="Primary navigation">
       <div class="brand-section">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0284c7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6 8 4 12 4 14a8 8 0 0 0 16 0c0-2-2-6-8-12z"/></svg>
         <div>
@@ -24,8 +24,8 @@
       </div>
 
       <ul class="nav-menu" role="list">
-        <li class="nav-item active">
-          <a href="index.html" aria-current="page">
+        <li class="nav-item active" aria-current="page">
+          <a href="index.html">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
             <span>Dashboard</span>
           </a>
@@ -126,8 +126,8 @@
 
           <!-- Connection Status -->
           <div class="status-badge" id="connection-badge" role="status" aria-live="polite">
-            <span class="status-dot demo" id="connection-dot"></span>
-            <span id="connection-text">Demo Mode</span>
+            <span class="status-dot live" id="connection-dot"></span>
+              <span id="connection-text">Node ESP Connected</span>
           </div>
         </div>
       </header>

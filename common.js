@@ -236,19 +236,18 @@ function setConnectionStatus(status) {
   if (!dot || !label) return;
 
   dot.className = 'status-dot';
-  if (status === 'live') {
-    if (state.hardware && state.hardware.connected) {
-      dot.classList.add('live');
-      label.textContent = 'Node ESP Connected';
-      label.title = 'NodeMCU ESP8266 is actively sending sensor data';
-    } else {
-      dot.classList.add('node-disconnected');
-      label.textContent = 'Node ESP Not Connected';
-      label.title = 'NodeMCU ESP8266 is not connected to the server';
-    }
+  const isConnected = (state.hardware && typeof state.hardware.connected === 'boolean')
+    ? state.hardware.connected
+    : (status !== 'disconnected');
+
+  if (isConnected) {
+    dot.classList.add('live');
+    label.textContent = 'Node ESP Connected';
+    label.title = 'NodeMCU ESP8266 is connected and syncing sensor telemetry';
   } else {
-    dot.classList.add('server-offline');
-    label.textContent = status === 'disconnected' ? 'Server Offline' : 'Node ESP Not Connected';
+    dot.classList.add('node-disconnected');
+    label.textContent = 'Node ESP Not Connected';
+    label.title = 'NodeMCU ESP8266 is not connected';
   }
 }
 
