@@ -344,3 +344,39 @@ async function toggleMotorDash() {
 
   if (btn) btn.disabled = false;
 }
+
+/**
+ * Toggle between Auto and Manual mode directly from the Dashboard badge
+ */
+async function toggleMotorModeDash() {
+  const targetMode = state.motorManual ? 'auto' : 'manual';
+  if (state.apiMode) {
+    try {
+      const response = await fetch(`${CONFIG.API_URL}/api/motor`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status: state.motorOn, mode: targetMode }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        state.motorManual = (data.mode === 'manual');
+        const badge = document.getElementById('motor-badge');
+        if (badge) {
+          badge.textContent = targetMode === 'auto' ? 'Auto' : 'Manual';
+          badge.className = targetMode === 'manual' ? 'hw-badge active-mode' : 'hw-badge';
+        }
+      }
+    } catch (e) {
+      console.warn('Mode toggle error:', e);
+    }
+  } else {
+    state.motorManual = (targetMode === 'manual');
+    const badge = document.getElementById('motor-badge');
+    if (badge) {
+      badge.textContent = targetMode === 'auto' ? 'Auto' : 'Manual';
+      badge.className = targetMode === 'manual' ? 'hw-badge active-mode' : 'hw-badge';
+    }
+  }
+}
+window.toggleMotorModeDash = toggleMotorModeDash;
+

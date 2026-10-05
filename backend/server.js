@@ -880,6 +880,40 @@ app.post('/api/motor', (req, res) => {
   evaluateNotifications(db, db.sensor.waterPercentage, db.sensor.waterPercentage, prevMotor, status, now);
   writeDB(db);
 
+  const localIps = getLocalIPs();
+  const lastSeenMs = lastSensorTimestamp ? new Date(lastSensorTimestamp).getTime() : null;
+  const secAgo = lastSeenMs ? Math.floor((Date.now() - lastSeenMs) / 1000) : null;
+  const hardwareConnected = lastSeenMs ? (secAgo <= 45) : ((Date.now() - SERVER_START_TIME) < 60000);
+
+  let alertLevel = 'normal';
+  let alertMessage = 'Normal water level — system is running fine.';
+  if (!hardwareConnected) {
+    alertLevel   = 'critical';
+    alertMessage = 'Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.';
+  } else if (db.motor.status) {
+    alertLevel   = 'normal';
+    alertMessage = db.motor.mode === 'manual' ? 'Water pump switched ON manually.' : 'Water pump switched ON automatically.';
+  } else {
+    alertLevel   = 'normal';
+    alertMessage = 'Water pump is idle.';
+  }
+
+  io.emit('sensor:data', {
+    sensor: db.sensor,
+    motor:  db.motor,
+    buzzer: db.buzzer,
+    alert:  { level: alertLevel, message: alertMessage },
+    hardware: {
+      connected: hardwareConnected,
+      lastSeen: lastSensorTimestamp,
+      secondsAgo: secAgo,
+      serverIps: localIps,
+      publicUrl: publicTunnelUrl,
+      publicIp: publicIp,
+      apiUrl: localIps.map(ip => `http://${ip}:${PORT}/api/sensor`),
+    }
+  });
+
   console.log(`[${new Date().toLocaleTimeString()}]  Motor → ${status ? 'ON' : 'OFF'} (${db.motor.mode})`);
   res.json(db.motor);
 });
