@@ -229,8 +229,8 @@ function applyDashboardData(data) {
   }
 
   // 5. Alert banner — check hardware connection
-  const isEspConnected = data.hardware ? data.hardware.connected : true;
-  if (!isEspConnected && state.apiMode) {
+  const hwConnected = data.hardware ? data.hardware.connected : true;
+  if (!hwConnected && state.apiMode) {
     setAlertBanner('critical', 'Node ESP is not connected — No data received from NodeMCU ESP8266. Check power and Wi-Fi connection.');
   } else {
     const alertLevel   = data.alert ? data.alert.level : getLocalAlertLevel(pct);
