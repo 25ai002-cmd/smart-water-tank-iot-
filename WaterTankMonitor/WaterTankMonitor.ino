@@ -287,7 +287,7 @@ void sendToServer(float distance) {
   }
 
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(4000); // 4 second connection timeout
+  http.setTimeout(10000); // 10 second timeout for Render free tier cold starts
 
   String body = "{\"sensorDistance\":" + String(distance, 1) + "}";
 

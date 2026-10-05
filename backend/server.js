@@ -165,9 +165,14 @@ function broadcastUnreadCount(count) {
 
 
 /* ==================================================
-   DATABASE HELPERS
+   DATABASE HELPERS (In-Memory Cached for Instant Sync)
    ================================================== */
+let dbCache = null;
+
 function readDB() {
+  if (dbCache) {
+    return dbCache;
+  }
   try {
     const data = JSON.parse(fs.readFileSync(DB_PATH, 'utf8'));
 
@@ -191,16 +196,15 @@ function readDB() {
     // Notification store
     if (!data.notifications)      data.notifications      = [];
     if (!data.notificationState)  data.notificationState  = {};
-    // Dry-run tracker lives in notificationState
     if (data.notificationState.dryRunTracker === undefined) {
       data.notificationState.dryRunTracker = null;
     }
 
-
-    return data;
+    dbCache = data;
+    return dbCache;
   } catch {
-    return {
-      sensor: { tankHeight: TANK_HEIGHT, sensorDistance: 5, waterLevel: 15, waterPercentage: 75, timestamp: new Date().toISOString() },
+    dbCache = {
+      sensor: { tankHeight: TANK_HEIGHT, sensorDistance: 15, waterLevel: 5, waterPercentage: 25, timestamp: new Date().toISOString() },
       motor:  { status: false, mode: 'auto', lastChanged: new Date().toISOString(), onSince: null, sourceEmpty: false },
       buzzer: { status: false, lastChanged: new Date().toISOString() },
       settings: { motorOnThreshold: 20, motorOffThreshold: 90, buzzerLowThreshold: 20, buzzerHighThreshold: 90, scheduleEnabled: false, scheduleTime: '05:00' },
@@ -210,10 +214,12 @@ function readDB() {
       notifications: [],
       notificationState: {},
     };
+    return dbCache;
   }
 }
 
 function writeDB(data) {
+  dbCache = data;
   try {
     fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf8');
   } catch (err) {

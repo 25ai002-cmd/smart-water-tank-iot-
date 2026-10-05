@@ -387,7 +387,7 @@ bool postEndpoint(const String& url, const String& body, bool updateActuators) {
   }
 
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(isHttps ? 3500 : 1500); // 3.5s for cloud HTTPS, 1.5s for local LAN
+  http.setTimeout(isHttps ? 10000 : 1500); // 10s for cloud HTTPS, 1.5s for local LAN
 
   Serial.print("[HTTP] POST → ");
   Serial.print(url);

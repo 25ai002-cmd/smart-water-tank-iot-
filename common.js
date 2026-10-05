@@ -31,6 +31,7 @@ const state = {
 
 // Listeners list for pages to subscribe to real-time status updates
 const statusListeners = [];
+let lastSharedData = null;
 
 /**
   * Register a listener callback that triggers when new API data is received.
@@ -39,6 +40,9 @@ const statusListeners = [];
 function onStatusUpdate(callback) {
   if (typeof callback === 'function') {
     statusListeners.push(callback);
+    if (lastSharedData) {
+      try { callback(lastSharedData); } catch (e) {}
+    }
   }
 }
 
@@ -190,6 +194,7 @@ async function fetchUnreadCount() {
   */
 function applySharedData(data) {
   if (!data || !data.sensor) return;
+  lastSharedData = data;
 
   state.waterPercentage = data.sensor.waterPercentage;
 
