@@ -275,7 +275,7 @@ function addHistory(db, sensorDistance, waterLevel, waterPercentage, motorOn, bu
    ================================================== */
 
 const SERVER_START_TIME = Date.now();
-const initialDb = readDB();
+dbCache = null; // Always start fresh — don't serve stale disk data until NodeMCU sends live telemetry
 let lastSensorTimestamp = null; // Reset to null on server boot — await live sensor telemetry
 let lastKnownHardwareConnected = null; // track connection transitions (NodeMCU ESP8266)
 let stopConsecutiveHits  = 0;    // debounce counter for motor auto-stop at target threshold
