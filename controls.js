@@ -45,15 +45,21 @@ function syncControlsUI(data) {
 
     const modeDot = document.getElementById('mode-dot');
     const modeValue = document.getElementById('mode-value');
+    const modeSwitchBtn = document.getElementById('mode-switch-btn');
+    const isManual = data.motor.mode === 'manual';
     if (modeValue) {
       if (!isEspConnected && state.apiMode) {
-        modeValue.innerHTML = `${data.motor.mode === 'manual' ? 'Manual' : 'Auto'} <span style="color:#ef4444; font-size:0.75rem; font-weight:700;">(🔴 Node ESP Not Connected)</span>`;
+        modeValue.innerHTML = `${isManual ? 'Manual' : 'Auto'} <span style="color:#ef4444; font-size:0.75rem; font-weight:700;">(🔴 Node ESP Not Connected)</span>`;
       } else {
-        modeValue.textContent = data.motor.mode === 'manual' ? 'Manual Override' : 'Auto';
+        modeValue.textContent = isManual ? 'Manual Override' : 'Auto';
       }
     }
     if (modeDot) {
       modeDot.style.background = isEspConnected ? '#10b981' : '#ef4444';
+    }
+    if (modeSwitchBtn) {
+      modeSwitchBtn.textContent = isManual ? 'Resume Auto Mode' : 'Set to Manual';
+      modeSwitchBtn.className   = isManual ? 'btn-secondary btn-highlight' : 'btn-secondary';
     }
   }
 
@@ -116,6 +122,36 @@ async function toggleMotor() {
     }, 30000);
   }
 }
+
+/**
+ * Toggle between Auto Mode and Manual Override Mode
+ */
+async function toggleMode() {
+  const currentMode = state.motorManual ? 'manual' : 'auto';
+  const targetMode = currentMode === 'manual' ? 'auto' : 'manual';
+
+  if (state.apiMode) {
+    try {
+      const response = await fetch(`${CONFIG.API_URL}/api/motor`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status: state.motorOn, mode: targetMode }),
+      });
+      if (!response.ok) throw new Error();
+      const data = await response.json();
+      state.motorManual = (data.mode === 'manual');
+      syncControlsUI({ motor: data });
+      showFeedback('settings-feedback', targetMode === 'auto' ? '✅ Switched to Auto Mode! Sensors will control pump.' : '⚡ Switched to Manual Mode.', 'success');
+    } catch {
+      showFeedback('settings-feedback', '❌ Failed to change mode on server.', 'error');
+    }
+  } else {
+    state.motorManual = (targetMode === 'manual');
+    syncControlsUI({ motor: { status: state.motorOn, mode: targetMode } });
+    showFeedback('settings-feedback', targetMode === 'auto' ? '✅ Switched to Auto Mode!' : '⚡ Switched to Manual Mode.', 'success');
+  }
+}
+window.toggleMode = toggleMode;
 
 /**
  * Directly reset resource empty lock when user refills the resource tank

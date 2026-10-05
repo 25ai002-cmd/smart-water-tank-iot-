@@ -54,8 +54,8 @@ void registerWiFiNetworks() {
 // 1. Render Cloud Server (Accessible from anywhere via mobile data / internet)
 const String CLOUD_SERVER_URL = "https://smart-water-tank-iot.onrender.com/api/sensor";
 
-// 2. Local PC Server (Runs on your laptop via START SERVER.bat)
-const String LOCAL_SERVER_URL = "http://10.204.4.141:3000/api/sensor";
+// 2. Local PC Server (Set empty to route directly to Cloud Render with 0 delay)
+const String LOCAL_SERVER_URL = "";
 
 // ── PUSHOVER NATIVE NOTIFICATIONS CONFIGURATION ─────────────
 const char* PUSHOVER_API_TOKEN = "amec2ekb4b2x69g9nidq98qfszr5r6";
@@ -84,7 +84,7 @@ const float SENSOR_TOTAL_HEIGHT = 21.0;
 const float TANK_HEIGHT = 20.0;
 
 // How often to read sensor and send data to server (milliseconds)
-const unsigned long SEND_INTERVAL = 3000; // 3 seconds
+const unsigned long SEND_INTERVAL = 800; // 0.8 seconds (ultra-fast real-time response)
 
 /* ===========================================================
    GLOBAL VARIABLES — do not change
@@ -402,7 +402,7 @@ bool postEndpoint(const String& url, const String& body, bool updateActuators) {
     String response = http.getString();
 
     if (updateActuators) {
-      StaticJsonDocument<512> doc;
+      StaticJsonDocument<1024> doc;
       DeserializationError error = deserializeJson(doc, response);
       if (!error) {
         bool motorOn  = doc["motor"]["status"];

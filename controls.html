@@ -135,14 +135,25 @@
               Pump is idle
             </p>
           </div>
-          <button
-            class="btn-primary"
-            id="motor-toggle-btn"
-            onclick="toggleMotor()"
-            aria-label="Toggle pump ON or OFF"
-          >
-            Turn ON Pump
-          </button>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <button
+              class="btn-primary"
+              id="motor-toggle-btn"
+              onclick="toggleMotor()"
+              aria-label="Toggle pump ON or OFF"
+            >
+              Turn ON Pump
+            </button>
+            <button
+              class="btn-secondary"
+              id="mode-switch-btn"
+              onclick="toggleMode()"
+              style="padding: 0.6rem 0.9rem; font-size: 0.85rem;"
+              title="Resume automatic sensor-based control"
+            >
+              Resume Auto
+            </button>
+          </div>
         </div>
 
         <!-- Mode indicator strip -->

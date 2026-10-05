@@ -302,7 +302,7 @@ void sendToServer(float distance) {
     String response = http.getString();
 
     // Parse JSON payload from Express server
-    StaticJsonDocument<512> doc;
+    StaticJsonDocument<1024> doc;
     DeserializationError error = deserializeJson(doc, response);
 
     if (!error) {

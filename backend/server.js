@@ -631,18 +631,14 @@ app.post('/api/sensor', (req, res) => {
   let { waterLevel, waterPercentage, motorOn, buzzerOn, alertLevel, alertMessage } =
     calculateFromDistance(dist, settings);
 
-  // 🚨 HARD SAFETY & FAST AUTO-STOP LOGIC (0.5s instant cutoff on threshold detection):
+  // 🚨 HARD SAFETY & FAST AUTO-STOP (Cutoff immediately when tank is full or sensor dist <= 2cm):
   if (dist <= 2.0 || waterPercentage >= stopThresh) {
     motorOn = false;
     db.motor.status = false;
+    db.motor.mode = 'auto'; // Revert to auto once filled
     db.motor.onSince = null;
     stopConsecutiveHits = 0;
-  } else {
-    stopConsecutiveHits = 0;
-  }
-
-  // 🚨 RESOURCE EMPTY PROTECTION & MOTOR CONTROL:
-  if (db.motor.sourceEmpty && !db.motor.status && !autoProbingNow) {
+  } else if (db.motor.sourceEmpty && !db.motor.status && !autoProbingNow) {
     motorOn = false;
     db.motor.status = false;
     db.motor.onSince = null;
@@ -650,7 +646,11 @@ app.post('/api/sensor', (req, res) => {
     // 30s Auto-probe in progress — keep pump running during probe window
     motorOn = true;
     db.motor.status = true;
+  } else if (db.motor.mode === 'manual') {
+    // ── MANUAL MODE: User clicked Turn ON or Turn OFF — respect user's command! ──
+    motorOn = db.motor.status;
   } else if (!db.motor.sourceEmpty && motorOn !== null) {
+    // ── AUTO MODE: Control motor via user-defined thresholds ──
     if (motorOn && !prevMotor) {
       db.motor.onSince = new Date().toISOString();
       db.pushState.stallNotified = false;
@@ -658,8 +658,9 @@ app.post('/api/sensor', (req, res) => {
       db.motor.onSince = null;
     }
     db.motor.status      = motorOn;
-    db.motor.mode        = 'auto'; // Automatically switch to Auto Mode on threshold trigger
     db.motor.lastChanged = new Date().toISOString();
+  } else {
+    motorOn = db.motor.status;
   }
 
   // Update sensor data
@@ -789,6 +790,10 @@ app.post('/api/sensor', (req, res) => {
     motor:  db.motor,
     buzzer: db.buzzer,
     alert:  { level: alertLevel, message: alertMessage },
+    settings: {
+      motorOnThreshold: settings.motorOnThreshold,
+      motorOffThreshold: settings.motorOffThreshold,
+    }
   });
 });
 
@@ -1093,9 +1098,18 @@ setInterval(() => {
   const now  = new Date();
   const hh   = String(now.getHours()).padStart(2, '0');
   const mm   = String(now.getMinutes()).padStart(2, '0');
-  const todayStr   = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const serverTime = `${hh}:${mm}`;
 
-  if (`${hh}:${mm}` === db.settings.scheduleTime) {
+  // Also check Indian Standard Time (IST, UTC+5:30) for cloud Render compatibility
+  let istTime = '';
+  try {
+    const istFmt = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false });
+    istTime = istFmt.format(now);
+  } catch {}
+
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+  if (serverTime === db.settings.scheduleTime || istTime === db.settings.scheduleTime) {
     if (!db.pushState.lastScheduledTrigger || db.pushState.lastScheduledTrigger !== todayStr) {
       db.pushState.lastScheduledTrigger = todayStr;
       if (db.motor.sourceEmpty) {
