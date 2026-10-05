@@ -110,6 +110,10 @@ void setup() {
   digitalWrite(BUZZER_PIN, LOW);
   digitalWrite(LED_PIN, HIGH); // Off for ESP8266 built-in LED (inverted logic)
 
+  // Configure SSL buffer limits to conserve ESP8266 RAM for HTTPS Render cloud sync
+  secureClient.setInsecure();
+  secureClient.setBufferSizes(512, 512);
+
   // Configure Multi-WiFi and Connect
   registerWiFiNetworks();
   connectWiFi();

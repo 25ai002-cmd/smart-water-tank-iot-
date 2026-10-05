@@ -291,7 +291,7 @@ void connectWiFi() {
     Serial.print(WiFi.RSSI());
     Serial.println(" dBm");
     Serial.print("  Cloud Server URL   : ");
-    Serial.println(SERVER_URL);
+    Serial.println(CLOUD_SERVER_URL);
     Serial.println("========================================\n");
   } else {
     digitalWrite(LED_PIN, HIGH); // Turn LED OFF on failure
