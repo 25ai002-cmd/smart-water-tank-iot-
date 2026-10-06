@@ -611,7 +611,8 @@ app.post('/api/sensor', (req, res) => {
   // ── SMART AUTO-RETRY ON RESOURCE REFILL (30 SECONDS) ──────────────
   // If resource was empty and tank is not full, auto-probe every 30s to check if source is refilled
   const RETRY_INTERVAL_MS = 30000;
-  const stopThresh = settings.motorOffThreshold !== undefined ? settings.motorOffThreshold : 90;
+  const startThresh = settings.motorOnThreshold !== undefined ? settings.motorOnThreshold : 20;
+  const stopThresh  = settings.motorOffThreshold !== undefined ? settings.motorOffThreshold : 90;
   let autoProbingNow = false;
 
   if (db.motor.sourceEmpty && currentWaterPct < stopThresh) {
@@ -686,7 +687,6 @@ app.post('/api/sensor', (req, res) => {
   // ── DYNAMIC BUZZER LOGIC ────────────────────────────
   // Buzzer activates ONLY when water level is <= dynamic Start Threshold set on Dashboard (e.g. 40%)
   // Buzzer stays 100% SILENT whenever water level is above the decided Start Threshold!
-  const startThresh = settings.motorOnThreshold !== undefined ? settings.motorOnThreshold : 20;
   const finalBuzzerOn = (waterPercentage <= startThresh);
 
   db.buzzer.status      = finalBuzzerOn;
