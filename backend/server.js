@@ -646,8 +646,16 @@ app.post('/api/sensor', (req, res) => {
     // 30s Auto-probe in progress — keep pump running during probe window
     motorOn = true;
     db.motor.status = true;
+  } else if (waterPercentage <= startThresh && !db.motor.sourceEmpty) {
+    // 💧 CRITICAL LOW WATER AUTO-START (<= 20%): Tank is empty!
+    // Auto-start motor and ensure server/dashboard reflect motor ON with 'Turn OFF' button
+    motorOn = true;
+    db.motor.status = true;
+    db.motor.mode = 'auto';
+    if (!db.motor.onSince) db.motor.onSince = new Date().toISOString();
+    db.motor.lastChanged = new Date().toISOString();
   } else if (db.motor.mode === 'manual') {
-    // ── MANUAL MODE: User clicked Turn ON or Turn OFF — respect user's manual control! ──
+    // ── MANUAL MODE (Between 20% and 90%): User clicked Turn ON or Turn OFF — respect user's manual control! ──
     motorOn = db.motor.status;
   } else if (!db.motor.sourceEmpty && motorOn !== null) {
     // ── AUTO MODE: Control motor via user-defined thresholds ──
