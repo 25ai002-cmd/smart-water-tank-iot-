@@ -311,13 +311,39 @@ function setTextContent(id, value) {
    MOTOR TOGGLE — Dashboard Quick Control
    ================================================ */
 async function toggleMotorDash() {
-  const newStatus = !state.motorOn;
   const btn = document.getElementById('dash-motor-btn');
+  const motorCard = document.getElementById('motor-card');
+  const motorStatusText = document.getElementById('motor-status-text');
+  const motorBadge = document.getElementById('motor-badge');
+  const motorControlLabel = document.getElementById('motor-control-label');
 
-  // Disable button briefly to prevent double-click
-  if (btn) btn.disabled = true;
+  const isCurrentlyOn = (btn && btn.textContent.trim().toLowerCase().includes('turn off')) || !!state.motorOn;
+  const newStatus = !isCurrentlyOn;
 
-  if (state.apiMode) {
+  // 1. Optimistic instant UI reaction
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = newStatus ? 'Turn OFF' : 'Turn ON';
+    btn.className   = newStatus ? 'btn-sm danger' : 'btn-sm';
+  }
+  if (motorCard) motorCard.classList.toggle('is-on', newStatus);
+  if (motorStatusText) {
+    motorStatusText.textContent = newStatus ? 'ON' : 'OFF';
+    motorStatusText.className   = newStatus ? 'hw-status is-on' : 'hw-status';
+    motorStatusText.style.color = '';
+  }
+  if (motorBadge) {
+    motorBadge.textContent = 'Manual';
+    motorBadge.className   = 'hw-badge badge-manual';
+  }
+  if (motorControlLabel) {
+    motorControlLabel.style.color = '';
+    motorControlLabel.textContent = newStatus ? 'Running — Manual override' : 'Pump is idle (Manual mode)';
+  }
+
+  const isLive = (typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http')) || state.apiMode;
+
+  if (isLive) {
     try {
       const response = await fetch(`${CONFIG.API_URL}/api/motor`, {
         method:  'POST',
@@ -326,26 +352,55 @@ async function toggleMotorDash() {
       });
       if (!response.ok) throw new Error('API error');
       const data = await response.json();
-      state.motorOn    = data.status;
+      state.motorOn     = data.status;
       state.motorManual = (data.mode === 'manual');
-      applyDashboardData({ motor: data, sensor: { waterPercentage: state.waterPercentage, tankHeight: CONFIG.tankHeight, sensorDistance: state.lastSensorDist || 25, waterLevel: state.lastWaterLevel || 75, timestamp: new Date().toISOString() }, buzzer: { status: state.buzzerOn } });
-    } catch {
-      // Show brief error in control label
-      const lbl = document.getElementById('motor-control-label');
-      if (lbl) { lbl.textContent = '❌ Failed — server unreachable'; lbl.style.color = 'var(--danger)'; }
-      setTimeout(() => { if (lbl) { lbl.style.color = ''; lbl.textContent = state.motorOn ? 'Running — Manual override' : 'Pump is idle'; } }, 3000);
+      state.apiMode     = true;
+
+      applyDashboardData({
+        motor: data,
+        sensor: {
+          waterPercentage: state.waterPercentage,
+          tankHeight: CONFIG.tankHeight,
+          sensorDistance: state.lastSensorDist || 25,
+          waterLevel: state.lastWaterLevel || 75,
+          timestamp: new Date().toISOString()
+        },
+        buzzer: { status: state.buzzerOn }
+      });
+    } catch (err) {
+      console.error('Failed to toggle motor:', err);
+      // Revert optimistic update on error
+      if (btn) {
+        btn.textContent = isCurrentlyOn ? 'Turn OFF' : 'Turn ON';
+        btn.className   = isCurrentlyOn ? 'btn-sm danger' : 'btn-sm';
+      }
+      if (motorCard) motorCard.classList.toggle('is-on', isCurrentlyOn);
+      if (motorStatusText) {
+        motorStatusText.textContent = isCurrentlyOn ? 'ON' : 'OFF';
+        motorStatusText.className   = isCurrentlyOn ? 'hw-status is-on' : 'hw-status';
+      }
+      if (motorControlLabel) {
+        motorControlLabel.textContent = '❌ Failed — server unreachable';
+        motorControlLabel.style.color = 'var(--danger)';
+        setTimeout(() => {
+          if (motorControlLabel) {
+            motorControlLabel.style.color = '';
+            motorControlLabel.textContent = isCurrentlyOn ? 'Running — Manual override' : 'Pump is idle (Manual mode)';
+          }
+        }, 3000);
+      }
+    } finally {
+      if (btn) btn.disabled = false;
     }
   } else {
     // Demo mode: simulate toggle
     state.motorManual = true;
-    state.motorOn = newStatus;
-    // Trigger re-render using current slider value
+    state.motorOn     = newStatus;
     const slider = document.getElementById('water-slider');
     const pct = slider ? parseInt(slider.value) : state.waterPercentage;
     onSliderChange(pct);
+    if (btn) btn.disabled = false;
   }
-
-  if (btn) btn.disabled = false;
 }
 
 /**

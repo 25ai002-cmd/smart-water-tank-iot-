@@ -88,9 +88,18 @@ function syncControlsUI(data) {
    MOTOR MANUAL TOGGLE CONTROLS
    ================================================ */
 async function toggleMotor() {
-  const newStatus = !state.motorOn;
+  const toggleBtn = document.getElementById('motor-toggle-btn');
+  const isCurrentlyOn = (toggleBtn && toggleBtn.textContent.trim().toLowerCase().includes('turn off')) || !!state.motorOn;
+  const newStatus = !isCurrentlyOn;
 
-  if (state.apiMode) {
+  if (toggleBtn) {
+    toggleBtn.textContent = newStatus ? 'Turn OFF Pump' : 'Turn ON Pump';
+    toggleBtn.className   = newStatus ? 'btn-primary btn-danger' : 'btn-primary';
+  }
+
+  const isLive = (typeof window !== 'undefined' && window.location && window.location.protocol.startsWith('http')) || state.apiMode;
+
+  if (isLive) {
     try {
       const response = await fetch(`${CONFIG.API_URL}/api/motor`, {
         method:  'POST',
@@ -99,12 +108,14 @@ async function toggleMotor() {
       });
       if (!response.ok) throw new Error();
       const data = await response.json();
-      state.motorOn = data.status;
+      state.motorOn     = data.status;
       state.motorManual = (data.mode === 'manual');
+      state.apiMode     = true;
       syncControlsUI({ motor: data });
       showFeedback('settings-feedback', data.status ? '⚡ Pump started successfully.' : '⚡ Pump stopped.', 'success');
     } catch {
       showFeedback('settings-feedback', '❌ Failed to toggle motor on server.', 'error');
+      syncControlsUI({ motor: { status: isCurrentlyOn, mode: state.motorManual ? 'manual' : 'auto' } });
     }
   } else {
     // Demo mode simulated toggle
