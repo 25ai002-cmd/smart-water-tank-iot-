@@ -164,8 +164,38 @@ void loop() {
     // 3. Print sensor telemetry to Serial
     printReadings(distance, waterLevel, waterPct);
 
+    // ── 12-SECOND HARDWARE DRY-RUN PROTECTION (Runs directly on ESP8266) ──
+    static unsigned long motorStartedAt = 0;
+    static float levelAtMotorStart = -1.0;
+    static bool hardwareDryRunLock = false;
+
+    if (localMotorRunning) {
+      if (motorStartedAt == 0) {
+        motorStartedAt = now;
+        levelAtMotorStart = waterPct;
+      } else if (now - motorStartedAt >= 12000) { // 12 seconds
+        if (waterPct < levelAtMotorStart + 0.4f) {
+          Serial.println("  🚨 [DRY RUN CUTOFF] No water rise in 12s! Motor stopped to protect pump.");
+          localMotorRunning = false;
+          hardwareDryRunLock = true;
+          setRelayState(false);
+          digitalWrite(BUZZER_PIN, LOW);
+        } else {
+          motorStartedAt = now;
+          levelAtMotorStart = waterPct;
+        }
+      }
+    } else {
+      motorStartedAt = 0;
+      levelAtMotorStart = -1.0;
+      hardwareDryRunLock = false;
+    }
+
     // ── HARDWARE ACTUATOR CONTROL (Dashboard Manual + Local Auto Hybrid) ──
-    if (isManualMode) {
+    if (hardwareDryRunLock) {
+      setRelayState(false);
+      digitalWrite(BUZZER_PIN, LOW);
+    } else if (isManualMode) {
       // Manual Mode active from Dashboard: Follow user's manual ON/OFF command!
       setRelayState(localMotorRunning);
     } else {
@@ -388,16 +418,10 @@ void sendToServer(float distance) {
    =========================================================== */
 
 void setRelayState(bool turnOn) {
+  pinMode(RELAY_PIN, OUTPUT);
   if (RELAY_ACTIVE_LOW) {
-    if (turnOn) {
-      pinMode(RELAY_PIN, OUTPUT);
-      digitalWrite(RELAY_PIN, LOW);   // LOW (0V) turns Active-LOW Relay ON
-    } else {
-      pinMode(RELAY_PIN, INPUT_PULLUP); // High impedance pullup turns Active-LOW Relay OFF 100%
-      digitalWrite(RELAY_PIN, HIGH);
-    }
+    digitalWrite(RELAY_PIN, turnOn ? LOW : HIGH); // LOW (0V) = ON, HIGH (3.3V) = OFF
   } else {
-    pinMode(RELAY_PIN, OUTPUT);
     digitalWrite(RELAY_PIN, turnOn ? HIGH : LOW);
   }
 }

@@ -469,16 +469,10 @@ void sendToServer(float distance) {
    =========================================================== */
 
 void setRelayState(bool turnOn) {
+  pinMode(RELAY_PIN, OUTPUT);
   if (RELAY_ACTIVE_LOW) {
-    if (turnOn) {
-      pinMode(RELAY_PIN, OUTPUT);
-      digitalWrite(RELAY_PIN, LOW);   // LOW (0V) turns Active-LOW Relay ON
-    } else {
-      pinMode(RELAY_PIN, INPUT_PULLUP); // High impedance pullup turns Active-LOW Relay OFF 100%
-      digitalWrite(RELAY_PIN, HIGH);
-    }
+    digitalWrite(RELAY_PIN, turnOn ? LOW : HIGH); // LOW (0V) = ON, HIGH (3.3V) = OFF
   } else {
-    pinMode(RELAY_PIN, OUTPUT);
     digitalWrite(RELAY_PIN, turnOn ? HIGH : LOW);
   }
 }
