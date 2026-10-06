@@ -87,6 +87,8 @@ WiFiClient        wifiClient;
 WiFiClientSecure  secureClient;
 bool              localMotorRunning = false;
 bool              isManualMode = false;
+float             lastSmoothedDistance = -1.0;
+float             lastReportedDistance = -1.0;
 
 /* ===========================================================
    SETUP — Runs once on power up / reset
@@ -286,9 +288,6 @@ float getSingleDistance() {
   if (distance <= 0 || distance > (TANK_HEIGHT + 15.0)) return -1;
   return distance;
 }
-
-static float lastSmoothedDistance = -1.0;
-static float lastReportedDistance = -1.0;
 
 float measureDistance() {
   float samples[9];

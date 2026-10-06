@@ -100,6 +100,8 @@ bool          offlineSourceEmpty = false;
 unsigned long offlineMotorStartTime = 0;
 unsigned long offlineLastEmptyTime = 0;
 float         offlineStartWaterPct = -1.0;
+float         lastSmoothedDistance = -1.0;
+float         lastReportedDistance = -1.0;
 
 
 /* ===========================================================
@@ -332,9 +334,6 @@ float getSingleDistance() {
   if (distance <= 0 || distance > (TANK_HEIGHT + 15.0)) return -1;
   return distance;
 }
-
-static float lastSmoothedDistance = -1.0;
-static float lastReportedDistance = -1.0;
 
 float measureDistance() {
   float samples[7];
