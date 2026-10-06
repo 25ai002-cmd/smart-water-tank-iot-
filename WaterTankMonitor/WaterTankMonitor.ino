@@ -151,10 +151,13 @@ void loop() {
     }
 
     if (distance < 0) {
-      Serial.println("[ERROR] Sensor measurement failed. Check HC-SR04 wiring (VCC, GND, TRIG, ECHO).");
-      // Blink LED quickly twice to signal sensor error
+      if (lastReportedDistance > 0) {
+        distance = lastReportedDistance;
+      } else {
+        distance = 15.0f; // Safe baseline fallback
+      }
+      Serial.println("[WARN] Sensor measurement failed. Using fallback distance for keepalive heartbeat.");
       blinkLED(2, 100);
-      return;
     }
 
     // 2. Calculate water height & percentage
