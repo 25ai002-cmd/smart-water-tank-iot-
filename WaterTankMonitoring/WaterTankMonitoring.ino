@@ -135,8 +135,8 @@ void setup() {
   WiFi.setAutoReconnect(true);
   WiFi.setAutoConnect(true);
 
-  // Configure SSL buffer limits to conserve ESP8266 RAM over weeks of continuous uptime
-  secureClient.setBufferSizes(512, 512);
+  // Configure SSL buffer limits to allow modern Cloudflare/Render TLS cert chains
+  secureClient.setBufferSizes(2048, 1024);
 
   // Configure Multi-WiFi and Connect
   registerWiFiNetworks();
