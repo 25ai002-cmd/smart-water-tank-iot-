@@ -85,6 +85,8 @@ const unsigned long SEND_INTERVAL = 500; // 0.5 seconds (ultra-fast real-time re
 unsigned long     lastSendTime = 0;
 WiFiClient        wifiClient;
 WiFiClientSecure  secureClient;
+bool              localMotorRunning = false;
+bool              isManualMode = false;
 
 /* ===========================================================
    SETUP — Runs once on power up / reset
@@ -162,7 +164,30 @@ void loop() {
     // 3. Print sensor telemetry to Serial
     printReadings(distance, waterLevel, waterPct);
 
-    // 4. Send telemetry to software backend API & update actuators
+    // ── HARDWARE ACTUATOR CONTROL (Dashboard Manual + Local Auto Hybrid) ──
+    if (isManualMode) {
+      // Manual Mode active from Dashboard: Follow user's manual ON/OFF command!
+      setRelayState(localMotorRunning);
+    } else {
+      // Auto Mode: Autonomous sensor-based threshold control (0 delay)
+      if (waterPct <= 20.0f) {
+        Serial.println("  👉 [LOCAL AUTO TRIGGER] Water is LOW (<= 20%) -> Starting Motor & Buzzer!");
+        localMotorRunning = true;
+        setRelayState(true);
+        digitalWrite(BUZZER_PIN, HIGH);
+      } else if (waterPct >= 90.0f || distance <= 2.5f) {
+        Serial.println("  👉 [LOCAL AUTO TRIGGER] Tank is FULL (>= 90%) -> Stopping Motor & Buzzer!");
+        localMotorRunning = false;
+        setRelayState(false);
+        digitalWrite(BUZZER_PIN, LOW);
+      } else {
+        digitalWrite(BUZZER_PIN, LOW); // Buzzer stays silent between 20% and 90%
+        setRelayState(localMotorRunning); // Maintain motor state until tank is filled
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
+    // 4. Send telemetry to software backend API & sync actuators
     sendToServer(distance);
   }
 
@@ -312,9 +337,17 @@ void sendToServer(float distance) {
     if (!error) {
       bool motorOn  = doc["motor"]["status"];
       bool buzzerOn = doc["buzzer"]["status"];
+      const char* motorMode = doc["motor"]["mode"];
       const char* alertMsg = doc["alert"]["message"];
 
-      // Update physical actuators
+      if (motorMode != nullptr && strcmp(motorMode, "manual") == 0) {
+        isManualMode = true;
+      } else {
+        isManualMode = false;
+      }
+
+      // Update physical actuators and keep local state synchronized
+      localMotorRunning = motorOn;
       setRelayState(motorOn);
       digitalWrite(BUZZER_PIN, buzzerOn ? HIGH : LOW);
 

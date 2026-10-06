@@ -186,6 +186,7 @@ function applyDashboardData(data) {
         motorStatusText.style.color = '#ef4444';
       } else {
         motorStatusText.textContent = isOn ? 'ON' : 'OFF';
+        motorStatusText.className = isOn ? 'hw-status is-on' : 'hw-status';
         motorStatusText.style.color = '';
       }
     }
@@ -195,11 +196,13 @@ function applyDashboardData(data) {
         motorBadge.className   = 'hw-badge';
         motorBadge.style.background = 'rgba(239, 68, 68, 0.2)';
         motorBadge.style.color = '#ef4444';
+        motorBadge.title = 'Resource is empty — refill source and reset';
       } else {
         motorBadge.style.background = '';
         motorBadge.style.color = '';
         motorBadge.textContent = isManual ? 'Manual' : 'Auto';
-        motorBadge.className   = isManual ? 'hw-badge active-mode' : 'hw-badge';
+        motorBadge.className   = isManual ? 'hw-badge badge-manual' : 'hw-badge badge-auto';
+        motorBadge.title       = isManual ? 'Click to switch to Auto mode' : 'Click to switch to Manual override';
       }
     }
     if (dashMotorBtn) {
@@ -214,7 +217,7 @@ function applyDashboardData(data) {
         motorControlLabel.style.color = '';
         motorControlLabel.textContent = isOn
           ? (isManual ? 'Running — Manual override' : 'Running — Auto mode')
-          : 'Pump is idle';
+          : (isManual ? 'Pump is idle (Manual mode)' : 'Pump is idle (Auto mode)');
       }
     }
   }

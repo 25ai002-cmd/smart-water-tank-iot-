@@ -181,6 +181,17 @@ void loop() {
     // 3. Print sensor telemetry to Serial
     printReadings(distance, waterLevel, waterPct);
 
+    // ── LOCAL AUTONOMOUS CONTROL (Instant Hardware Response) ──
+    if (waterPct <= 20.0f) {
+      setRelayState(true);
+      digitalWrite(BUZZER_PIN, HIGH);
+    } else if (waterPct >= 90.0f || distance <= 2.5f) {
+      setRelayState(false);
+      digitalWrite(BUZZER_PIN, LOW);
+    } else {
+      digitalWrite(BUZZER_PIN, LOW);
+    }
+
     // 4. Check Wi-Fi state & sync
     if (wifiMulti.run() == WL_CONNECTED) {
       digitalWrite(LED_PIN, LOW); // Solid ON when connected

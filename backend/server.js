@@ -647,7 +647,7 @@ app.post('/api/sensor', (req, res) => {
     motorOn = true;
     db.motor.status = true;
   } else if (db.motor.mode === 'manual') {
-    // ── MANUAL MODE: User clicked Turn ON or Turn OFF — respect user's command! ──
+    // ── MANUAL MODE: User clicked Turn ON or Turn OFF — respect user's manual control! ──
     motorOn = db.motor.status;
   } else if (!db.motor.sourceEmpty && motorOn !== null) {
     // ── AUTO MODE: Control motor via user-defined thresholds ──
