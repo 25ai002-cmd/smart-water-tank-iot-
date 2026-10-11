@@ -70,6 +70,11 @@ function syncControlsUI(data) {
     if (startInput && document.activeElement !== startInput) startInput.value = data.settings.motorOnThreshold;
     if (stopInput && document.activeElement !== stopInput) stopInput.value = data.settings.motorOffThreshold;
 
+    const noteStart = document.getElementById('note-start');
+    const noteStop  = document.getElementById('note-stop');
+    if (noteStart && data.settings.motorOnThreshold)  noteStart.textContent = `${data.settings.motorOnThreshold}%`;
+    if (noteStop && data.settings.motorOffThreshold) noteStop.textContent  = `${data.settings.motorOffThreshold}%`;
+
     // Sync Schedule settings inputs
     const scheduleToggle = document.getElementById('schedule-enabled-toggle');
     const scheduleTimeInput = document.getElementById('input-schedule-time');
@@ -257,6 +262,10 @@ async function saveSettings() {
         showFeedback('threshold-feedback', `❌ ${data.error || 'Failed to save settings'}`, 'error');
         return;
       }
+      const noteStart = document.getElementById('note-start');
+      const noteStop  = document.getElementById('note-stop');
+      if (noteStart) noteStart.textContent = `${start}%`;
+      if (noteStop)  noteStop.textContent  = `${stop}%`;
       showFeedback('threshold-feedback', '⚡ Threshold settings saved successfully!', 'success');
     } catch {
       showFeedback('threshold-feedback', '❌ Failed to save threshold settings to server.', 'error');
@@ -264,6 +273,10 @@ async function saveSettings() {
   } else {
     CONFIG.motorOnThreshold = start;
     CONFIG.motorOffThreshold = stop;
+    const noteStart = document.getElementById('note-start');
+    const noteStop  = document.getElementById('note-stop');
+    if (noteStart) noteStart.textContent = `${start}%`;
+    if (noteStop)  noteStop.textContent  = `${stop}%`;
     showFeedback('threshold-feedback', '⚡ Threshold settings saved locally!', 'success');
   }
 }

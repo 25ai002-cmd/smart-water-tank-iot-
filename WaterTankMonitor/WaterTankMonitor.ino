@@ -67,7 +67,7 @@ const String SERVER_URL = "https://smart-water-tank-iot.onrender.com/api/sensor"
 // Relay Module Type:
 // Set to true for Active-LOW relay modules (LOW = Relay ON, HIGH = Relay OFF)
 // Set to false for Active-HIGH relay modules (HIGH = Relay ON, LOW = Relay OFF)
-#define RELAY_ACTIVE_LOW false
+#define RELAY_ACTIVE_LOW true
 
 // Sensor total mounting height from bottom of tank in centimeters
 const float SENSOR_TOTAL_HEIGHT = 21.0;
@@ -169,19 +169,34 @@ void loop() {
     float waterLevel = constrain(SENSOR_TOTAL_HEIGHT - distance, 0.0f, TANK_HEIGHT);
     float waterPct   = constrain((waterLevel / TANK_HEIGHT) * 100.0f, 0.0f, 100.0f);
 
-    // 🛑 INSTANT HARDWARE AUTO-STOP (0ms Cutoff):
-    // In Auto Mode: Immediately cut off relay when water reaches the target stop threshold.
-    // Do NOT wait for cloud HTTP roundtrip latency (which causes overfilling to 69%).
-    if (!isManualMode && waterPct >= currentStopThreshold) {
-      if (localMotorRunning) {
-        Serial.print("  🛑 [AUTO-STOP] Target threshold reached (");
-        Serial.print(waterPct, 1);
-        Serial.print("% >= ");
-        Serial.print(currentStopThreshold, 1);
-        Serial.println("%). Stopping relay immediately to prevent overshoot!");
+    // ═══════════════════════════════════════════════════════════════
+    // 🧠 NODEMCU AUTONOMOUS DECISION ENGINE (Hardware-Level Control)
+    // NodeMCU takes the decision itself and acts via relay to stop or start water!
+    // ═══════════════════════════════════════════════════════════════
+    if (!isManualMode) {
+      if (waterPct >= currentStopThreshold || (distance > 0 && distance <= 2.0f)) {
+        // TANK REACHED DECIDED STOP THRESHOLD (e.g. 60%) -> CUT RELAY POWER IMMEDIATELY!
+        if (localMotorRunning) {
+          Serial.print("  🛑 [ESP AUTO-STOP] Decided threshold reached (");
+          Serial.print(waterPct, 1);
+          Serial.print("% >= ");
+          Serial.print(currentStopThreshold, 1);
+          Serial.println("%). RELAY CUTTING POWER TO MOTOR NOW!");
+        }
+        localMotorRunning = false;
+        setRelayState(false);
+      } else if (waterPct <= currentStartThreshold && !hardwareDryRunLock) {
+        // TANK AT OR BELOW START THRESHOLD (e.g. 20%) -> START MOTOR TO FILL
+        if (!localMotorRunning) {
+          Serial.print("  💧 [ESP AUTO-START] Water low (");
+          Serial.print(waterPct, 1);
+          Serial.print("% <= ");
+          Serial.print(currentStartThreshold, 1);
+          Serial.println("%). RELAY STARTING MOTOR TO FILL!");
+        }
+        localMotorRunning = true;
+        setRelayState(true);
       }
-      localMotorRunning = false;
-      setRelayState(false);
     }
 
     // 3. Print sensor telemetry to Serial
@@ -385,9 +400,17 @@ void sendToServer(float distance, float waterPct) {
         isManualMode = false;
       }
 
-      // If in auto mode and water has reached or exceeded stop threshold, enforce pump OFF locally
-      if (!isManualMode && waterPct >= currentStopThreshold) {
-        motorOn = false;
+      // ── HARDWARE AUTONOMOUS AUTHORITY IN AUTO MODE ──
+      // If in auto mode, the NodeMCU maintains full physical authority:
+      // If water has reached or passed stop threshold, relay is strictly FORCED OFF!
+      if (!isManualMode) {
+        if (waterPct >= currentStopThreshold || (distance > 0 && distance <= 2.0f)) {
+          motorOn = false;
+        } else if (waterPct <= currentStartThreshold && !hardwareDryRunLock) {
+          motorOn = true;
+        } else {
+          motorOn = localMotorRunning;
+        }
       }
 
       // If server commanded motor ON, always honor it and clear any local dry-run lock
