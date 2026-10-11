@@ -337,20 +337,20 @@ float getSingleDistance() {
 }
 
 float measureDistance() {
-  float samples[7];
+  float samples[9];
   int validCount = 0;
 
-  for (int i = 0; i < 7; i++) {
+  for (int i = 0; i < 9; i++) {
     float d = getSingleDistance();
     if (d > 0) {
       samples[validCount++] = d;
     }
-    delay(8);
+    delay(20); // 20ms dissipates acoustic reverberations
   }
 
   if (validCount == 0) return lastReportedDistance >= 0 ? lastReportedDistance : -1;
 
-  // Sort samples to extract median
+  // Sort samples in ascending order
   for (int i = 0; i < validCount - 1; i++) {
     for (int j = i + 1; j < validCount; j++) {
       if (samples[i] > samples[j]) {
@@ -361,19 +361,40 @@ float measureDistance() {
     }
   }
 
-  float currentMedian = samples[validCount / 2];
-
-  // Step 1: EMA filter — balanced smoothing (alpha=0.4)
-  if (lastSmoothedDistance < 0) {
-    lastSmoothedDistance = currentMedian;
+  // Trimmed Mean (removes outliers, ripples, splash bubbles)
+  float rawFiltered;
+  if (validCount >= 5) {
+    int trim = (validCount >= 7) ? 2 : 1;
+    float sum = 0;
+    int count = 0;
+    for (int i = trim; i < validCount - trim; i++) {
+      sum += samples[i];
+      count++;
+    }
+    rawFiltered = sum / count;
   } else {
-    lastSmoothedDistance = (0.40 * currentMedian) + (0.60 * lastSmoothedDistance);
+    rawFiltered = samples[validCount / 2];
   }
 
-  // Step 2: Deadband filter — only update reported value if change > 0.3 cm
-  // This eliminates small noise/ripple fluctuations on the dashboard completely
-  if (lastReportedDistance < 0 || fabs(lastSmoothedDistance - lastReportedDistance) >= 0.3) {
-    lastReportedDistance = round(lastSmoothedDistance * 10.0) / 10.0; // round to 1 decimal
+  // Rate-of-Change Limiter & EMA
+  if (lastSmoothedDistance < 0) {
+    lastSmoothedDistance = rawFiltered;
+  } else {
+    float maxDelta = offlineMotorStatus ? 0.35f : 0.15f;
+    float delta = rawFiltered - lastSmoothedDistance;
+    if (delta > maxDelta)  delta = maxDelta;
+    if (delta < -maxDelta) delta = -maxDelta;
+    lastSmoothedDistance += (0.30f * delta);
+  }
+
+  // Anti-Jitter Deadband
+  if (lastReportedDistance < 0) {
+    lastReportedDistance = round(lastSmoothedDistance * 10.0) / 10.0;
+  } else {
+    float deadband = offlineMotorStatus ? 0.10f : 0.25f;
+    if (fabs(lastSmoothedDistance - lastReportedDistance) >= deadband) {
+      lastReportedDistance = round(lastSmoothedDistance * 10.0) / 10.0;
+    }
   }
 
   return lastReportedDistance;

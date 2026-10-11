@@ -306,12 +306,12 @@ float measureDistance() {
     if (d > 0) {
       samples[validCount++] = d;
     }
-    delay(6);
+    delay(20); // 20ms allows acoustic echoes and multipath wall reflections to dissipate
   }
 
   if (validCount == 0) return lastReportedDistance >= 0 ? lastReportedDistance : -1;
 
-  // Sort samples to extract true median (ignores splash peaks & noise)
+  // Sort samples in ascending order
   for (int i = 0; i < validCount - 1; i++) {
     for (int j = i + 1; j < validCount; j++) {
       if (samples[i] > samples[j]) {
@@ -322,21 +322,44 @@ float measureDistance() {
     }
   }
 
-  float currentMedian = samples[validCount / 2];
-
-  // Step 1: Adaptive EMA filter
-  // When pump is running, use alpha=0.65 to eliminate measurement lag so stop threshold fires immediately.
-  // When pump is idle, use alpha=0.25 for ultra-stable surface wave smoothing.
-  float alpha = localMotorRunning ? 0.65f : 0.25f;
-  if (lastSmoothedDistance < 0) {
-    lastSmoothedDistance = currentMedian;
+  // Step 1: Trimmed Mean (discards wave crests, splash peaks, and noise drops)
+  float rawFiltered;
+  if (validCount >= 5) {
+    int trim = (validCount >= 7) ? 2 : 1;
+    float sum = 0;
+    int count = 0;
+    for (int i = trim; i < validCount - trim; i++) {
+      sum += samples[i];
+      count++;
+    }
+    rawFiltered = sum / count;
   } else {
-    lastSmoothedDistance = (alpha * currentMedian) + ((1.0f - alpha) * lastSmoothedDistance);
+    rawFiltered = samples[validCount / 2]; // Median fallback
   }
 
-  // Step 2: Deadband filter — responsive tracking while filling, smoothed when idle
-  if (lastReportedDistance < 0 || localMotorRunning || fabs(lastSmoothedDistance - lastReportedDistance) >= 0.2) {
-    lastReportedDistance = round(lastSmoothedDistance * 10.0) / 10.0; // round to 1 decimal
+  // Step 2: Rate-of-Change Limiter (Physics Slew-Rate Limiter)
+  // Water cannot physically jump by 0.8 cm (4%) in 500ms.
+  // Clamps maximum physical delta per reading to completely stop random 53% <-> 49% jumps.
+  if (lastSmoothedDistance < 0) {
+    lastSmoothedDistance = rawFiltered;
+  } else {
+    float maxDelta = localMotorRunning ? 0.35f : 0.15f; // Max 0.35cm while pumping, 0.15cm when idle
+    float delta = rawFiltered - lastSmoothedDistance;
+    if (delta > maxDelta)  delta = maxDelta;
+    if (delta < -maxDelta) delta = -maxDelta;
+
+    // Step 3: Low-pass EMA smoothing (alpha=0.30)
+    lastSmoothedDistance += (0.30f * delta);
+  }
+
+  // Step 4: Anti-Jitter Deadband Filter
+  if (lastReportedDistance < 0) {
+    lastReportedDistance = round(lastSmoothedDistance * 10.0) / 10.0;
+  } else {
+    float deadband = localMotorRunning ? 0.10f : 0.25f;
+    if (fabs(lastSmoothedDistance - lastReportedDistance) >= deadband) {
+      lastReportedDistance = round(lastSmoothedDistance * 10.0) / 10.0; // round to 1 decimal
+    }
   }
 
   return lastReportedDistance;

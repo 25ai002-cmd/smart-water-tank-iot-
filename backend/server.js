@@ -231,7 +231,7 @@ function writeDB(data) {
 /* ==================================================
    BUSINESS LOGIC
    ================================================== */
-function calculateFromDistance(sensorDistance, settings = {}) {
+function calculateFromDistance(sensorDistance, settings = {}, prevPct = null, motorRunning = false) {
   const startThreshold = settings.motorOnThreshold  !== undefined ? settings.motorOnThreshold  : 20;
   const stopThreshold  = settings.motorOffThreshold !== undefined ? settings.motorOffThreshold : 90;
   const buzzerLow      = settings.buzzerLowThreshold  !== undefined ? settings.buzzerLowThreshold  : 20;
@@ -239,7 +239,12 @@ function calculateFromDistance(sensorDistance, settings = {}) {
 
   const rawLevel        = SENSOR_TOTAL_HEIGHT - sensorDistance;
   const waterLevel      = +Math.max(0, Math.min(TANK_HEIGHT, rawLevel)).toFixed(1);
-  const waterPercentage = +Math.round(Math.max(0, Math.min(100, (waterLevel / TANK_HEIGHT) * 100)));
+  let waterPercentage   = +Math.round(Math.max(0, Math.min(100, (waterLevel / TANK_HEIGHT) * 100)));
+
+  // Anti-jitter hysteresis when pump is idle: suppress 1% border flickering
+  if (prevPct !== null && prevPct !== undefined && !motorRunning && Math.abs(waterPercentage - prevPct) <= 1) {
+    waterPercentage = prevPct;
+  }
 
   const motorOn = waterPercentage <= startThreshold ? true
                 : waterPercentage >= stopThreshold ? false
@@ -630,7 +635,7 @@ app.post('/api/sensor', (req, res) => {
   }
 
   let { waterLevel, waterPercentage, motorOn, buzzerOn, alertLevel, alertMessage } =
-    calculateFromDistance(dist, settings);
+    calculateFromDistance(dist, settings, prevPct, db.motor.status);
 
   // 🚨 HARD SAFETY & FAST AUTO-STOP (Cutoff immediately when tank is full or sensor dist <= 2cm):
   if (dist <= 2.0 || waterPercentage >= stopThresh) {
