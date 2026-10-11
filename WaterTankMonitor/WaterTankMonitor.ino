@@ -355,14 +355,11 @@ void sendToServer(float distance) {
         isManualMode = false;
       }
 
-      // If server cleared sourceEmpty or commanded motor ON manually, unlock hardware dry-run lock
-      if (!sourceEmpty && isManualMode && motorOn) {
+      // If server commanded motor ON, always honor it and clear any local dry-run lock
+      if (motorOn) {
         hardwareDryRunLock = false;
-      } else if (!sourceEmpty && !hardwareDryRunLock) {
-        // normal condition
       } else if (sourceEmpty) {
         hardwareDryRunLock = true;
-        motorOn = false;
       }
 
       // If hardware dry-run lock is active locally, enforce motor OFF
