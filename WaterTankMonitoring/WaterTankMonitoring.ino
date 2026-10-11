@@ -78,10 +78,9 @@ const char* PUSHOVER_USER_KEY  = "ukbbgtkotfge6biu7168zw8oiiwds9";
 #define RELAY_ACTIVE_LOW true
 
 // Sensor total mounting height from bottom of tank in centimeters
-// Calibrated to physical mount: 15.0cm water + 4.5cm air gap = 19.5cm total height
-const float SENSOR_TOTAL_HEIGHT = 19.5;
+const float SENSOR_TOTAL_HEIGHT = 20.5;
 
-// Tank maximum capacity height in centimeters (Full reference = 20.0cm)
+// Tank maximum full water capacity height in centimeters (100% full)
 const float TANK_HEIGHT = 20.0;
 
 // How often to read sensor and send data to server (milliseconds)
