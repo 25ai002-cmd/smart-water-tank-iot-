@@ -489,7 +489,7 @@ void sendToServer(float distance, float waterPct) {
       digitalWrite(LED_PIN, LOW);
 
       Serial.print("  [SYNC OK] Motor: ");
-      Serial.print(motorOn  ? "ON [PUMP ACTIVE]" : "OFF [PUMP IDLE]");
+      Serial.print(finalMotorOn ? "ON [PUMP ACTIVE]" : "OFF [PUMP IDLE]");
       Serial.print("  |  Buzzer: ");
       Serial.print(buzzerOn ? "ACTIVE" : "OFF");
       Serial.print("  |  Server Alert: ");
