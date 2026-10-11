@@ -424,10 +424,10 @@ void sendToServer(float distance, float waterPct) {
     DeserializationError error = deserializeJson(doc, response);
 
     if (!error) {
-      bool motorOn  = doc["motor"]["status"];
-      bool buzzerOn = doc["buzzer"]["status"];
-      bool sourceEmpty = doc["motor"]["sourceEmpty"] | false;
-      const char* motorMode = doc["motor"]["mode"];
+      bool serverMotorOn   = doc["motor"]["status"] | false;
+      bool buzzerOn        = doc["buzzer"]["status"] | false;
+      bool sourceEmpty     = doc["motor"]["sourceEmpty"] | false;
+      const char* motorMode= doc["motor"]["mode"];
       const char* alertMsg = doc["alert"]["message"];
 
       // Sync user-configured thresholds from server response
@@ -440,38 +440,47 @@ void sendToServer(float distance, float waterPct) {
         }
       }
 
-      if (motorMode != nullptr && strcmp(motorMode, "manual") == 0) {
+      // Manual mode check (ignore legacy sourceEmpty 'manual' lock)
+      if (motorMode != nullptr && strcmp(motorMode, "manual") == 0 && !sourceEmpty) {
         isManualMode = true;
       } else {
         isManualMode = false;
       }
 
-      // ── HARDWARE AUTONOMOUS AUTHORITY IN AUTO MODE ──
-      // If in auto mode, the NodeMCU maintains full physical authority:
-      if (!isManualMode) {
+      // Manual start from web dashboard clears dry-run lock
+      if (serverMotorOn && isManualMode) {
+        hardwareDryRunLock = false;
+        dryRunProbing      = false;
+        dryRunCutoffTime   = 0;
+        localMotorRunning  = true;
+      }
+
+      bool finalMotorOn;
+
+      if (isManualMode) {
+        finalMotorOn = serverMotorOn;
+      } else {
+        // Autonomous Auto Mode
         if (waterPct >= currentStopThreshold || (distance > 0 && distance <= 2.0f)) {
-          motorOn = false;
+          finalMotorOn       = false;
+          hardwareDryRunLock = false;
+          dryRunProbing      = false;
         } else if (hardwareDryRunLock) {
-          // In 30s cooldown: motor stays strictly OFF
-          motorOn = false;
+          // Strictly keep OFF during 30s dry-run cooldown
+          finalMotorOn = false;
         } else if (dryRunProbing) {
-          // 30s cooldown elapsed! 12s probe test is actively running: motor stays ON
-          motorOn = true;
+          // 30s cooldown expired! Running 12s test probe: pump stays ON!
+          finalMotorOn = true;
         } else if (waterPct <= currentStartThreshold) {
-          motorOn = true;
+          finalMotorOn = true;
         } else {
-          motorOn = localMotorRunning;
+          finalMotorOn = localMotorRunning;
         }
       }
 
-      // If dry-run lock is active during 30s cooldown, strictly keep motor OFF
-      if (hardwareDryRunLock) {
-        motorOn = false;
-      }
-
       // Update physical actuators and keep local state synchronized
-      localMotorRunning = motorOn;
-      setRelayState(motorOn);
+      localMotorRunning = finalMotorOn;
+      setRelayState(finalMotorOn);
       digitalWrite(BUZZER_PIN, buzzerOn ? HIGH : LOW);
 
       // Brief flash to indicate successful hardware-software sync

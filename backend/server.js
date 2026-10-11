@@ -485,9 +485,9 @@ function evaluateNotifications(db, prevPct, currentPct, prevMotor, currentMotor,
       const rise       = currentPct - ns.dryRunTracker.startLevel;
 
       if (secElapsed >= DRY_RUN_WINDOW_SEC && rise < DRY_RUN_MIN_RISE) {
-        // ── RESOURCE EMPTY & DRY RUN CONFIRMED: force motor OFF & lock out auto-mode ──
+        // ── RESOURCE EMPTY & DRY RUN CONFIRMED: force motor OFF for 30s cooldown ──
         db.motor.status              = false;
-        db.motor.mode                = 'manual';   // lock out auto-mode
+        db.motor.mode                = 'auto';     // Keep in auto mode so 30s probe will auto-restart
         db.motor.sourceEmpty         = true;       // flag resource as empty
         db.motor.lastSourceEmptyTime = new Date().toISOString();
         db.motor.onSince             = null;
@@ -733,7 +733,7 @@ app.post('/api/sensor', (req, res) => {
         };
         db.pushState.stallNotified = true;
         db.motor.status = false;
-        db.motor.mode   = 'manual';
+        db.motor.mode   = 'auto';
         db.motor.sourceEmpty = true;
         db.motor.onSince = null;
         db.motor.lastChanged = new Date().toISOString();
