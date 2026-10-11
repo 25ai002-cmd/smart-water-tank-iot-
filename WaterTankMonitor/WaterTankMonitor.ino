@@ -87,6 +87,7 @@ WiFiClient        wifiClient;
 WiFiClientSecure  secureClient;
 bool              localMotorRunning = false;
 bool              isManualMode = false;
+bool              hardwareDryRunLock = false;
 float             lastSmoothedDistance = -1.0;
 float             lastReportedDistance = -1.0;
 
@@ -172,28 +173,29 @@ void loop() {
     // ── 12-SECOND HARDWARE DRY-RUN PROTECTION (Runs directly on ESP8266) ──
     static unsigned long motorStartedAt = 0;
     static float levelAtMotorStart = -1.0;
-    static bool hardwareDryRunLock = false;
 
-    if (localMotorRunning) {
+    if (localMotorRunning && !hardwareDryRunLock) {
       if (motorStartedAt == 0) {
         motorStartedAt = now;
         levelAtMotorStart = waterPct;
-      } else if (now - motorStartedAt >= 12000) { // 12 seconds
+      } else if (now - motorStartedAt >= 12000) { // 12 seconds with no water level rise
         if (waterPct < levelAtMotorStart + 0.4f) {
-          Serial.println("  🚨 [DRY RUN CUTOFF] No water rise in 12s! Motor stopped to protect pump.");
-          localMotorRunning = false;
+          Serial.println("  🚨 [DRY RUN CUTOFF] No water rise in 12s! Pump halted to prevent dry-run damage.");
           hardwareDryRunLock = true;
+          localMotorRunning = false;
           setRelayState(false);
           digitalWrite(BUZZER_PIN, LOW);
+          motorStartedAt = 0;
+          levelAtMotorStart = -1.0;
         } else {
+          // Water is rising — refresh baseline
           motorStartedAt = now;
           levelAtMotorStart = waterPct;
         }
       }
-    } else {
+    } else if (!localMotorRunning) {
       motorStartedAt = 0;
       levelAtMotorStart = -1.0;
-      hardwareDryRunLock = false;
     }
 
     // ── HARDWARE ACTUATOR CONTROL (Dashboard Manual + Local Auto Hybrid) ──
@@ -369,6 +371,7 @@ void sendToServer(float distance) {
     if (!error) {
       bool motorOn  = doc["motor"]["status"];
       bool buzzerOn = doc["buzzer"]["status"];
+      bool sourceEmpty = doc["motor"]["sourceEmpty"] | false;
       const char* motorMode = doc["motor"]["mode"];
       const char* alertMsg = doc["alert"]["message"];
 
@@ -376,6 +379,21 @@ void sendToServer(float distance) {
         isManualMode = true;
       } else {
         isManualMode = false;
+      }
+
+      // If server cleared sourceEmpty or commanded motor ON manually, unlock hardware dry-run lock
+      if (!sourceEmpty && isManualMode && motorOn) {
+        hardwareDryRunLock = false;
+      } else if (!sourceEmpty && !hardwareDryRunLock) {
+        // normal condition
+      } else if (sourceEmpty) {
+        hardwareDryRunLock = true;
+        motorOn = false;
+      }
+
+      // If hardware dry-run lock is active locally, enforce motor OFF
+      if (hardwareDryRunLock) {
+        motorOn = false;
       }
 
       // Update physical actuators and keep local state synchronized

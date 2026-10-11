@@ -684,6 +684,11 @@ app.post('/api/sensor', (req, res) => {
   // ── SMART NOTIFICATION ENGINE ─────────────────────
   evaluateNotifications(db, prevPct, waterPercentage, prevMotor, db.motor.status, now);
 
+  // If dry-run triggered during evaluateNotifications, reflect the shut-off in motorOn
+  if (!db.motor.status) {
+    motorOn = false;
+  }
+
   // ── DYNAMIC BUZZER LOGIC ────────────────────────────
   // Buzzer activates ONLY when water level is <= dynamic Start Threshold set on Dashboard (e.g. 40%)
   // Buzzer stays 100% SILENT whenever water level is above the decided Start Threshold!
