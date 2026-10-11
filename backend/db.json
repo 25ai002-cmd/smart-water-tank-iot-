@@ -4,7 +4,7 @@
     "sensorDistance": 15,
     "waterLevel": 6,
     "waterPercentage": 30,
-    "timestamp": "2026-01-01T00:00:00.000Z"
+    "timestamp": "2026-10-06T18:10:38.903Z"
   },
   "motor": {
     "status": false,
@@ -16,14 +16,14 @@
   },
   "buzzer": {
     "status": false,
-    "lastChanged": "2026-01-01T00:00:00.000Z"
+    "lastChanged": "2026-10-06T18:10:38.905Z"
   },
   "history": [],
   "settings": {
     "motorOnThreshold": 20,
-    "motorOffThreshold": 90,
+    "motorOffThreshold": 60,
     "buzzerLowThreshold": 20,
-    "buzzerHighThreshold": 90,
+    "buzzerHighThreshold": 60,
     "scheduleEnabled": false,
     "scheduleTime": "05:00"
   },
@@ -35,6 +35,26 @@
   },
   "notifications": [
     {
+      "id": 1791310285712,
+      "notificationType": "node_esp_disconnected",
+      "title": "⚠️ Node ESP Not Connected",
+      "message": "NodeMCU ESP8266 is not connected! No sensor data received for 47s. Check ESP power and Wi-Fi connection.",
+      "priority": "critical",
+      "isRead": false,
+      "createdAt": "2026-10-06T18:11:25.712Z",
+      "resolvedAt": null
+    },
+    {
+      "id": 1791310238905,
+      "notificationType": "node_esp_connected",
+      "title": "🟢 Node ESP Connected",
+      "message": "NodeMCU ESP8266 connected and syncing sensor data successfully.",
+      "priority": "success",
+      "isRead": false,
+      "createdAt": "2026-10-06T18:10:38.905Z",
+      "resolvedAt": null
+    },
+    {
       "id": 1791183386959,
       "notificationType": "node_esp_disconnected",
       "title": "⚠️ Node ESP Not Connected",
@@ -42,14 +62,22 @@
       "priority": "critical",
       "isRead": false,
       "createdAt": "2026-10-05T06:56:26.959Z",
-      "resolvedAt": null
+      "resolvedAt": "2026-10-06T18:10:38.905Z"
     }
   ],
   "notificationState": {
     "dryRunTracker": null,
     "node_esp_disconnected": {
       "active": true,
-      "since": "2026-10-05T06:56:26.959Z"
+      "since": "2026-10-06T18:11:25.712Z"
+    },
+    "rapidLossTracker": {
+      "level": 30,
+      "time": 1791310238903
+    },
+    "node_esp_connected": {
+      "active": true,
+      "since": "2026-10-06T18:10:38.905Z"
     }
   }
 }

@@ -67,7 +67,7 @@ const String SERVER_URL = "https://smart-water-tank-iot.onrender.com/api/sensor"
 // Relay Module Type:
 // Set to true for Active-LOW relay modules (LOW = Relay ON, HIGH = Relay OFF)
 // Set to false for Active-HIGH relay modules (HIGH = Relay ON, LOW = Relay OFF)
-#define RELAY_ACTIVE_LOW true
+#define RELAY_ACTIVE_LOW false
 
 // Sensor total mounting height from bottom of tank in centimeters
 const float SENSOR_TOTAL_HEIGHT = 21.0;
@@ -88,6 +88,8 @@ WiFiClientSecure  secureClient;
 bool              localMotorRunning = false;
 bool              isManualMode = false;
 bool              hardwareDryRunLock = false;
+float             currentStopThreshold  = 60.0; // Dynamic stop threshold synced from server settings (default 60%)
+float             currentStartThreshold = 20.0; // Dynamic start threshold synced from server settings (default 20%)
 float             lastSmoothedDistance = -1.0;
 float             lastReportedDistance = -1.0;
 
@@ -167,6 +169,21 @@ void loop() {
     float waterLevel = constrain(SENSOR_TOTAL_HEIGHT - distance, 0.0f, TANK_HEIGHT);
     float waterPct   = constrain((waterLevel / TANK_HEIGHT) * 100.0f, 0.0f, 100.0f);
 
+    // 🛑 INSTANT HARDWARE AUTO-STOP (0ms Cutoff):
+    // In Auto Mode: Immediately cut off relay when water reaches the target stop threshold.
+    // Do NOT wait for cloud HTTP roundtrip latency (which causes overfilling to 69%).
+    if (!isManualMode && waterPct >= currentStopThreshold) {
+      if (localMotorRunning) {
+        Serial.print("  🛑 [AUTO-STOP] Target threshold reached (");
+        Serial.print(waterPct, 1);
+        Serial.print("% >= ");
+        Serial.print(currentStopThreshold, 1);
+        Serial.println("%). Stopping relay immediately to prevent overshoot!");
+      }
+      localMotorRunning = false;
+      setRelayState(false);
+    }
+
     // 3. Print sensor telemetry to Serial
     printReadings(distance, waterLevel, waterPct);
 
@@ -199,7 +216,7 @@ void loop() {
     }
 
     // 4. Send telemetry to software backend API & sync actuators (Server is Master)
-    sendToServer(distance);
+    sendToServer(distance, waterPct);
   }
 
   yield(); // Feed ESP8266 watchdog timer
@@ -292,15 +309,18 @@ float measureDistance() {
 
   float currentMedian = samples[validCount / 2];
 
-  // Step 1: EMA filter — ultra-smooth response against water waves (alpha=0.25)
+  // Step 1: Adaptive EMA filter
+  // When pump is running, use alpha=0.65 to eliminate measurement lag so stop threshold fires immediately.
+  // When pump is idle, use alpha=0.25 for ultra-stable surface wave smoothing.
+  float alpha = localMotorRunning ? 0.65f : 0.25f;
   if (lastSmoothedDistance < 0) {
     lastSmoothedDistance = currentMedian;
   } else {
-    lastSmoothedDistance = (0.25 * currentMedian) + (0.75 * lastSmoothedDistance);
+    lastSmoothedDistance = (alpha * currentMedian) + ((1.0f - alpha) * lastSmoothedDistance);
   }
 
-  // Step 2: Deadband filter — only update reported value if change >= 0.2 cm
-  if (lastReportedDistance < 0 || fabs(lastSmoothedDistance - lastReportedDistance) >= 0.2) {
+  // Step 2: Deadband filter — responsive tracking while filling, smoothed when idle
+  if (lastReportedDistance < 0 || localMotorRunning || fabs(lastSmoothedDistance - lastReportedDistance) >= 0.2) {
     lastReportedDistance = round(lastSmoothedDistance * 10.0) / 10.0; // round to 1 decimal
   }
 
@@ -313,7 +333,7 @@ float measureDistance() {
    POSTs telemetry JSON to backend and syncs Relay/Buzzer state.
    =========================================================== */
 
-void sendToServer(float distance) {
+void sendToServer(float distance, float waterPct) {
   HTTPClient http;
 
   if (SERVER_URL.startsWith("https://")) {
@@ -349,10 +369,25 @@ void sendToServer(float distance) {
       const char* motorMode = doc["motor"]["mode"];
       const char* alertMsg = doc["alert"]["message"];
 
+      // Sync user-configured thresholds from server response
+      if (doc.containsKey("settings")) {
+        if (doc["settings"].containsKey("motorOffThreshold")) {
+          currentStopThreshold = doc["settings"]["motorOffThreshold"].as<float>();
+        }
+        if (doc["settings"].containsKey("motorOnThreshold")) {
+          currentStartThreshold = doc["settings"]["motorOnThreshold"].as<float>();
+        }
+      }
+
       if (motorMode != nullptr && strcmp(motorMode, "manual") == 0) {
         isManualMode = true;
       } else {
         isManualMode = false;
+      }
+
+      // If in auto mode and water has reached or exceeded stop threshold, enforce pump OFF locally
+      if (!isManualMode && waterPct >= currentStopThreshold) {
+        motorOn = false;
       }
 
       // If server commanded motor ON, always honor it and clear any local dry-run lock

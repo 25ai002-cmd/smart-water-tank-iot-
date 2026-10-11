@@ -99,7 +99,8 @@ bool          offlineMotorStatus = false;
 bool          offlineSourceEmpty = false;
 unsigned long offlineMotorStartTime = 0;
 unsigned long offlineLastEmptyTime = 0;
-float         offlineStartWaterPct = -1.0;
+float         currentStopThreshold = 60.0;
+float         currentStartThreshold = 20.0;
 float         lastSmoothedDistance = -1.0;
 float         lastReportedDistance = -1.0;
 
@@ -184,10 +185,10 @@ void loop() {
     printReadings(distance, waterLevel, waterPct);
 
     // ── LOCAL AUTONOMOUS CONTROL (Instant Hardware Response) ──
-    if (waterPct <= 20.0f) {
+    if (waterPct <= currentStartThreshold) {
       setRelayState(true);
       digitalWrite(BUZZER_PIN, HIGH);
-    } else if (waterPct >= 90.0f || distance <= 2.5f) {
+    } else if (waterPct >= currentStopThreshold || distance <= 2.5f) {
       setRelayState(false);
       digitalWrite(BUZZER_PIN, LOW);
     } else {
@@ -418,6 +419,15 @@ bool postEndpoint(const String& url, const String& body, bool updateActuators) {
         bool motorOn  = doc["motor"]["status"];
         bool buzzerOn = doc["buzzer"]["status"];
         const char* alertMsg = doc["alert"]["message"];
+
+        if (doc.containsKey("settings")) {
+          if (doc["settings"].containsKey("motorOffThreshold")) {
+            currentStopThreshold = doc["settings"]["motorOffThreshold"].as<float>();
+          }
+          if (doc["settings"].containsKey("motorOnThreshold")) {
+            currentStartThreshold = doc["settings"]["motorOnThreshold"].as<float>();
+          }
+        }
 
         setRelayState(motorOn);
         digitalWrite(BUZZER_PIN, buzzerOn ? HIGH : LOW);
