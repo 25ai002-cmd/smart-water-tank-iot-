@@ -108,8 +108,8 @@ const DB_PATH      = path.join(__dirname, 'db.json');
 const FRONTEND_DIR = path.join(__dirname, '..');
 
 // ── Tank Configuration ────────────────────────────────
-const SENSOR_TOTAL_HEIGHT = 24.5; // Calibrated height: 20.0cm max water + 4.5cm safety air gap = 24.5cm
-const TANK_HEIGHT         = 20.0; // 100% full water capacity height (cm)
+const SENSOR_TOTAL_HEIGHT = 19.5; // Calibrated height: 15.0cm water + 4.5cm air gap = 19.5cm total mount height
+const TANK_HEIGHT         = 20.0; // 100% full capacity reference height (cm)
 const MOTOR_ON_THRESHOLD  = 20;
 const MOTOR_OFF_THRESHOLD = 90;
 const BUZZER_LOW          = 20;
