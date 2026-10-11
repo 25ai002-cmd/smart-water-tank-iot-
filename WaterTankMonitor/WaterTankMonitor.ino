@@ -198,33 +198,7 @@ void loop() {
       levelAtMotorStart = -1.0;
     }
 
-    // ── HARDWARE ACTUATOR CONTROL (Dashboard Manual + Local Auto Hybrid) ──
-    if (hardwareDryRunLock) {
-      setRelayState(false);
-      digitalWrite(BUZZER_PIN, LOW);
-    } else if (isManualMode) {
-      // Manual Mode active from Dashboard: Follow user's manual ON/OFF command!
-      setRelayState(localMotorRunning);
-    } else {
-      // Auto Mode: Autonomous sensor-based threshold control (0 delay)
-      if (waterPct <= 20.0f) {
-        Serial.println("  👉 [LOCAL AUTO TRIGGER] Water is LOW (<= 20%) -> Starting Motor & Buzzer!");
-        localMotorRunning = true;
-        setRelayState(true);
-        digitalWrite(BUZZER_PIN, HIGH);
-      } else if (waterPct >= 90.0f || distance <= 2.5f) {
-        Serial.println("  👉 [LOCAL AUTO TRIGGER] Tank is FULL (>= 90%) -> Stopping Motor & Buzzer!");
-        localMotorRunning = false;
-        setRelayState(false);
-        digitalWrite(BUZZER_PIN, LOW);
-      } else {
-        digitalWrite(BUZZER_PIN, LOW); // Buzzer stays silent between 20% and 90%
-        setRelayState(localMotorRunning); // Maintain motor state until tank is filled
-      }
-    }
-    // ─────────────────────────────────────────────────────────────────────
-
-    // 4. Send telemetry to software backend API & sync actuators
+    // 4. Send telemetry to software backend API & sync actuators (Server is Master)
     sendToServer(distance);
   }
 
