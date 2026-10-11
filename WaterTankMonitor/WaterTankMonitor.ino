@@ -88,6 +88,8 @@ WiFiClientSecure  secureClient;
 bool              localMotorRunning = false;
 bool              isManualMode = false;
 bool              hardwareDryRunLock = false;
+unsigned long     dryRunCutoffTime = 0;   // Timestamp when dry-run occurred
+bool              dryRunProbing    = false; // True during 12s test probe after 30s cooldown
 float             currentStopThreshold  = 60.0; // Dynamic stop threshold synced from server settings (default 60%)
 float             currentStartThreshold = 20.0; // Dynamic start threshold synced from server settings (default 20%)
 float             lastSmoothedDistance = -1.0;
@@ -171,7 +173,6 @@ void loop() {
 
     // ═══════════════════════════════════════════════════════════════
     // 🧠 NODEMCU AUTONOMOUS DECISION ENGINE (Hardware-Level Control)
-    // NodeMCU takes the decision itself and acts via relay to stop or start water!
     // ═══════════════════════════════════════════════════════════════
     if (!isManualMode) {
       if (waterPct >= currentStopThreshold || (distance > 0 && distance <= 2.0f)) {
@@ -183,8 +184,24 @@ void loop() {
           Serial.print(currentStopThreshold, 1);
           Serial.println("%). RELAY CUTTING POWER TO MOTOR NOW!");
         }
-        localMotorRunning = false;
+        localMotorRunning  = false;
+        hardwareDryRunLock = false;
+        dryRunProbing      = false;
+        dryRunCutoffTime   = 0;
         setRelayState(false);
+      } else if (hardwareDryRunLock) {
+        // ── 30-SECOND DRY-RUN RECOVERY COOLDOWN ──
+        if (now - dryRunCutoffTime >= 30000) {
+          Serial.println("  🔄 [AUTO-RETRY] 30s cooldown expired! Auto-starting pump for 12s test probe to check if resource refilled...");
+          hardwareDryRunLock = false;
+          dryRunProbing      = true;
+          localMotorRunning  = true;
+          setRelayState(true);
+        } else {
+          // Strictly enforce motor OFF during the 30s cooldown
+          localMotorRunning = false;
+          setRelayState(false);
+        }
       } else if (waterPct <= currentStartThreshold && !hardwareDryRunLock) {
         // TANK AT OR BELOW START THRESHOLD (e.g. 20%) -> START MOTOR TO FILL
         if (!localMotorRunning) {
@@ -202,7 +219,7 @@ void loop() {
     // 3. Print sensor telemetry to Serial
     printReadings(distance, waterLevel, waterPct);
 
-    // ── 12-SECOND HARDWARE DRY-RUN PROTECTION (Runs directly on ESP8266) ──
+    // ── 12-SECOND HARDWARE DRY-RUN PROTECTION & RESET ──
     static unsigned long motorStartedAt = 0;
     static float levelAtMotorStart = -1.0;
 
@@ -210,20 +227,26 @@ void loop() {
       if (motorStartedAt == 0) {
         motorStartedAt = now;
         levelAtMotorStart = waterPct;
-      } else if (now - motorStartedAt >= 12000) { // 12 seconds with no water level rise
-        if (waterPct < levelAtMotorStart + 0.4f) {
-          Serial.println("  🚨 [DRY RUN CUTOFF] No water rise in 12s! Pump halted to prevent dry-run damage.");
-          hardwareDryRunLock = true;
-          localMotorRunning = false;
-          setRelayState(false);
-          digitalWrite(BUZZER_PIN, LOW);
-          motorStartedAt = 0;
-          levelAtMotorStart = -1.0;
-        } else {
-          // Water is rising — refresh baseline
-          motorStartedAt = now;
-          levelAtMotorStart = waterPct;
+      } else if (waterPct >= levelAtMotorStart + 0.3f) {
+        // Water is actively rising! Reset 12s timer & confirm resource has water
+        if (dryRunProbing) {
+          Serial.println("  ✅ [REFILL CONFIRMED] Water level is rising! Resource has water. Continuing normal fill.");
+          dryRunProbing = false;
         }
+        dryRunCutoffTime  = 0;
+        motorStartedAt    = now;
+        levelAtMotorStart = waterPct;
+      } else if (now - motorStartedAt >= 12000) { // 12 seconds with no water level rise
+        Serial.println("  🚨 [DRY RUN CUTOFF] No water rise in 12s! Pump halted to prevent dry-run damage.");
+        Serial.println("  ⏳ [COOLDOWN] Pump resting for 30s. Will auto-restart to re-test resource.");
+        hardwareDryRunLock = true;
+        dryRunCutoffTime   = now;
+        dryRunProbing      = false;
+        localMotorRunning  = false;
+        setRelayState(false);
+        digitalWrite(BUZZER_PIN, LOW);
+        motorStartedAt     = 0;
+        levelAtMotorStart  = -1.0;
       }
     } else if (!localMotorRunning) {
       motorStartedAt = 0;
@@ -425,25 +448,23 @@ void sendToServer(float distance, float waterPct) {
 
       // ── HARDWARE AUTONOMOUS AUTHORITY IN AUTO MODE ──
       // If in auto mode, the NodeMCU maintains full physical authority:
-      // If water has reached or passed stop threshold, relay is strictly FORCED OFF!
       if (!isManualMode) {
         if (waterPct >= currentStopThreshold || (distance > 0 && distance <= 2.0f)) {
           motorOn = false;
-        } else if (waterPct <= currentStartThreshold && !hardwareDryRunLock) {
+        } else if (hardwareDryRunLock) {
+          // In 30s cooldown: motor stays strictly OFF
+          motorOn = false;
+        } else if (dryRunProbing) {
+          // 30s cooldown elapsed! 12s probe test is actively running: motor stays ON
+          motorOn = true;
+        } else if (waterPct <= currentStartThreshold) {
           motorOn = true;
         } else {
           motorOn = localMotorRunning;
         }
       }
 
-      // If server commanded motor ON, always honor it and clear any local dry-run lock
-      if (motorOn) {
-        hardwareDryRunLock = false;
-      } else if (sourceEmpty) {
-        hardwareDryRunLock = true;
-      }
-
-      // If hardware dry-run lock is active locally, enforce motor OFF
+      // If dry-run lock is active during 30s cooldown, strictly keep motor OFF
       if (hardwareDryRunLock) {
         motorOn = false;
       }
