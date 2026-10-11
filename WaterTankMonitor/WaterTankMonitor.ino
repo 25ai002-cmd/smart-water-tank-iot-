@@ -410,11 +410,12 @@ void sendToServer(float distance) {
 
 void setRelayState(bool turnOn) {
   pinMode(RELAY_PIN, OUTPUT);
-  if (RELAY_ACTIVE_LOW) {
-    digitalWrite(RELAY_PIN, turnOn ? LOW : HIGH); // LOW (0V) = ON, HIGH (3.3V) = OFF
-  } else {
-    digitalWrite(RELAY_PIN, turnOn ? HIGH : LOW);
-  }
+  int pinVal = turnOn ? (RELAY_ACTIVE_LOW ? LOW : HIGH) : (RELAY_ACTIVE_LOW ? HIGH : LOW);
+  digitalWrite(RELAY_PIN, pinVal);
+  Serial.print("  [RELAY PIN D2 (GPIO4)] -> Output: ");
+  Serial.print(pinVal == LOW ? "LOW (0V)" : "HIGH (3.3V)");
+  Serial.print(" | State: ");
+  Serial.println(turnOn ? "RELAY ENERGIZED (ON)" : "RELAY DE-ENERGIZED (OFF)");
 }
 
 /* ===========================================================
