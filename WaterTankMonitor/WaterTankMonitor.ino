@@ -254,7 +254,7 @@ void loop() {
     }
 
     // 4. Send telemetry to software backend API & sync actuators (Server is Master)
-    sendToServer(distance, waterPct);
+    sendToServer(distance, waterLevel, waterPct);
   }
 
   yield(); // Feed ESP8266 watchdog timer
@@ -394,7 +394,7 @@ float measureDistance() {
    POSTs telemetry JSON to backend and syncs Relay/Buzzer state.
    =========================================================== */
 
-void sendToServer(float distance, float waterPct) {
+void sendToServer(float distance, float waterLevel, float waterPct) {
   HTTPClient http;
 
   if (SERVER_URL.startsWith("https://")) {
@@ -407,7 +407,9 @@ void sendToServer(float distance, float waterPct) {
   http.addHeader("Content-Type", "application/json");
   http.setTimeout(10000); // 10 second timeout for Render free tier cold starts
 
-  String body = "{\"sensorDistance\":" + String(distance, 1) + "}";
+  String body = "{\"sensorDistance\":" + String(distance, 1) + 
+                ",\"waterLevel\":" + String(waterLevel, 1) + 
+                ",\"waterPercentage\":" + String(waterPct, 1) + "}";
 
   Serial.print("[HTTP] POST → ");
   Serial.print(SERVER_URL);

@@ -590,7 +590,7 @@ app.get('/api/sensor', (req, res) => {
 
 // ── POST /api/sensor — NodeMCU sends data here ──────
 app.post('/api/sensor', (req, res) => {
-  const { sensorDistance } = req.body;
+  const { sensorDistance, waterLevel: reqWaterLevel, waterPercentage: reqWaterPct } = req.body;
 
   if (sensorDistance === undefined || isNaN(sensorDistance)) {
     return res.status(400).json({ success: false, error: 'sensorDistance (number) is required.' });
@@ -636,6 +636,14 @@ app.post('/api/sensor', (req, res) => {
 
   let { waterLevel, waterPercentage, motorOn, buzzerOn, alertLevel, alertMessage } =
     calculateFromDistance(dist, settings, prevPct, db.motor.status);
+
+  // If NodeMCU sends calibrated waterLevel and waterPercentage directly, synchronize exactly
+  if (reqWaterLevel !== undefined && !isNaN(reqWaterLevel)) {
+    waterLevel = +parseFloat(reqWaterLevel).toFixed(1);
+  }
+  if (reqWaterPct !== undefined && !isNaN(reqWaterPct)) {
+    waterPercentage = Math.round(parseFloat(reqWaterPct));
+  }
 
   // 🚨 HARD SAFETY & FAST AUTO-STOP (Cutoff immediately when tank is full or sensor dist <= 2cm):
   if (dist <= 2.0 || waterPercentage >= stopThresh) {
